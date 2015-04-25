@@ -1,6 +1,6 @@
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.005
+local version = 1.006
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true}
 if not champions[myHero.charName] then return end
 
@@ -264,8 +264,8 @@ function _Orianna:__init()
     self.MenuLoaded = false
     self.Menu = nil
     self.Passive = { Damage = function(target) return getDmg("P", target, myHero) end, IsReady = false}
-    self.AA = {            Range = function(target) local int1 = 0 if ValidTarget(target) then int1 = GetDistance(target.minBBox, target)/2 end return myHero.range + GetDistance(myHero, myHero.minBBox) + int1 end, Damage = function(target) return getDmg("AD", target, myHero) end }
-    self.Q  = { Slot = _Q, Range = 825, Width = 130, Delay = 0, Speed = 1400, Type = "linear", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero) end}
+    self.AA = {            Range = function(target) return 620 end, Damage = function(target) return getDmg("AD", target, myHero) end }
+    self.Q  = { Slot = _Q, Range = 825, Width = 130, Delay = 0, Speed = 1300, Type = "linear", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero) end}
     self.W  = { Slot = _W, Range = 225, Width = 225, Delay = 0.15, Speed = math.huge, Type = "circular", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_W) == READY end, Mana = function() return myHero:GetSpellData(_W).mana end, Damage = function(target) return getDmg("W", target, myHero) end}
     self.E  = { Slot = _E, Range = 1095, Width = 85, Delay = 0.15, Speed = 1700, Type = "linear", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_E) == READY end, Mana = function() return myHero:GetSpellData(_E).mana end, Damage = function(target) return getDmg("E", target, myHero) end, Missile = nil}
     self.R  = { Slot = _R, Range = 370, Width = 370, Delay = 0.3, Speed = math.huge, Type = "circular", LastCastTime = 0, Collision = false, Aoe = true, ControlPressed = false, Sent = 0, IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end}
@@ -498,7 +498,7 @@ function _Orianna:LoadMenu()
     )
 
     AddCreateObjCallback(
-        function(obj) 
+        function(obj)
             if obj.name:lower():find("orianna") and obj.name:lower():find("yomu") and obj.name:lower():find("ring") and obj.name:lower():find("green") then
                 self.Position = obj
             elseif obj.name:lower():find("orianna") and obj.name:lower():find("ball") and obj.name:lower():find("flash") then
@@ -869,7 +869,7 @@ function _Orianna:LastHit()
 end
 function _Orianna:KillSteal()
     for idx, enemy in ipairs(GetEnemyHeroes()) do
-        if enemy.health/enemy.maxHealth < 0.4 and ValidTarget(enemy, self.TS.range) and enemy.visible and enemy.health > 0  then
+        if enemy.health/enemy.maxHealth <= 0.4 and ValidTarget(enemy, self.TS.range) and enemy.visible and enemy.health > 0  then
             local q, w, e, r, dmg = GetBestCombo(enemy)
             if dmg >= enemy.health and enemy.health > 0 then
                 if self.Q.IsReady() and self.Menu.KillSteal.useQ and (q or self.Q.Damage(enemy) > enemy.health) and not enemy.dead then self:CastQ(enemy) end
@@ -2650,7 +2650,7 @@ function _Initiator:CheckGapcloserSpells()
     if #GetAllyHeroes() > 0 then
         for idx, ally in ipairs(GetAllyHeroes()) do
             for champ, spell in pairs(GAPCLOSER_SPELLS) do
-                if enemy.charName == champ then
+                if ally.charName == champ then
                     self.Menu[ally.charName..spell] = true
                 end
             end
