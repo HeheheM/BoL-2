@@ -1,6 +1,6 @@
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.006
+local version = 1.007
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true}
 if not champions[myHero.charName] then return end
 
@@ -265,7 +265,7 @@ function _Orianna:__init()
     self.Menu = nil
     self.Passive = { Damage = function(target) return getDmg("P", target, myHero) end, IsReady = false}
     self.AA = {            Range = function(target) return 620 end, Damage = function(target) return getDmg("AD", target, myHero) end }
-    self.Q  = { Slot = _Q, Range = 825, Width = 130, Delay = 0, Speed = 1300, Type = "linear", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero) end}
+    self.Q  = { Slot = _Q, Range = 825, Width = 130, Delay = 0, Speed = 1200, Type = "linear", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero) end}
     self.W  = { Slot = _W, Range = 225, Width = 225, Delay = 0.15, Speed = math.huge, Type = "circular", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_W) == READY end, Mana = function() return myHero:GetSpellData(_W).mana end, Damage = function(target) return getDmg("W", target, myHero) end}
     self.E  = { Slot = _E, Range = 1095, Width = 85, Delay = 0.15, Speed = 1700, Type = "linear", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_E) == READY end, Mana = function() return myHero:GetSpellData(_E).mana end, Damage = function(target) return getDmg("E", target, myHero) end, Missile = nil}
     self.R  = { Slot = _R, Range = 370, Width = 370, Delay = 0.3, Speed = math.huge, Type = "circular", LastCastTime = 0, Collision = false, Aoe = true, ControlPressed = false, Sent = 0, IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end}
@@ -503,7 +503,7 @@ function _Orianna:LoadMenu()
                 self.Position = obj
             elseif obj.name:lower():find("orianna") and obj.name:lower():find("ball") and obj.name:lower():find("flash") then
                 self.Position = myHero
-            elseif obj.name:lower():find("linemissile") and obj.spellOwner.isMe then
+            elseif obj.name:lower():find("linemissile") and obj.spellOwner.isMe and (os.clock() - self.Q.LastCastTime < 0.5 or os.clock() - self.E.LastCastTime < 0.5) then
                 self.Position = obj
             end
         end
@@ -893,8 +893,8 @@ end
 
 function _Orianna:Run()
     myHero:MoveTo(mousePos.x, mousePos.z)
-    if self.E.IsReady() and GetDistanceSqr(self.Position, self.Position) > self.W.Width * self.W.Width then
-        CastE(myHero)
+    if self.E.IsReady() and GetDistanceSqr(self.Position, myHero) > self.W.Width * self.W.Width then
+        self:CastE(myHero)
     elseif self.Q.IsReady() and GetDistanceSqr(self.Position, myHero) > self.W.Width * self.W.Width then
         CastSpell(self.Q.Slot, myHero.x, myHero.z)
     end
@@ -2034,7 +2034,7 @@ function _Riven:CastQ(targ)
         local CastPosition, HitChance = prediction:GetPrediction(target, self.Q)
         if ValidTarget(target, self.Q.Range) then
             if CastPosition and HitChance >= 2 then
-                if OM:InRange(target, self.AA.OffsetRange) and self.Q.State == 0 and OM:CanAttack() then return end
+                if OM:InRange(target, self.AA.OffsetRange) and self.Q.State == 0 and OM:CanAttack() and self:RequiresAA(target) then return end
                 CastSpell(self.Q.Slot, CastPosition.x, CastPosition.z)
                 return
             end
@@ -2103,16 +2103,10 @@ end
 function _Riven:CastR1(targ)
     local target = ValidTarget(targ, self.R.Range) and targ or self.R.TS.target
     if self.R.IsReady() and not self.R.State and ValidTarget(target, self.R.Range) then
-        if self.E.IsReady() and self.Menu.Misc.cancelR then
-            local boolean, count, highestPriority = self.queue:Contains("E")
-            if not boolean then
-                self.queue:Insert(function() self:CastE(target) end, "E", 5)
-                local boolean, count, highestPriority = self.queue:Contains("R1")
-                if not boolean and not self.R.State then
-                    self.queue:Insert(function() self:CastR1(target) end, "R1", 4)
-                end
-                return
-            end
+        local CastPosition, HitChance = prediction:GetPrediction(target, self.R)
+        if self.E.IsReady() and self.Menu.Misc.cancelR and CastPosition then
+            CastSpell(self.E.Slot, CastPosition.x, CastPosition.z)
+            return
         end
         CastSpell(self.R.Slot)
         return
@@ -2130,15 +2124,8 @@ function _Riven:CastR2(targ)
         local CastPosition, HitChance = prediction:GetPrediction(target, self.R)
         if CastPosition and HitChance >= 1 then
             if self.E.IsReady() and self.Menu.Misc.cancelR then
-                local boolean, count, highestPriority = self.queue:Contains("E")
-                if not boolean then
-                    self.queue:Insert(function() self:CastE(target) end, "E", 5)
-                    local boolean, count, highestPriority = self.queue:Contains("R2")
-                    if not boolean then
-                        self.queue:Insert(function() self:CastR2(target) end, "R2", 4)
-                    end
-                    return
-                end
+                CastSpell(self.E.Slot, CastPosition.x, CastPosition.z)
+                return
             end
             CastSpell(self.R.Slot, CastPosition.x, CastPosition.z)
             return
