@@ -1,7 +1,7 @@
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.004
-local champions = {["Riven"] = true, ["Xerath"] = true}
+local version = 1.005
+local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true}
 if not champions[myHero.charName] then return end
 
 function Immune(target)
@@ -33,15 +33,20 @@ local Flash     = { Range = 400, IsReady = function() return (flashslot ~= nil a
 local Smite     = { Range = 780, IsReady = function() return (smiteslot ~= nil and myHero:CanUseSpell(smiteslot) == READY) end}
 
 local CastableItems = {
-Tiamat      = { Range = 400 , Slot   = function() return FindItemSlot("TiamatCleave") end,  reqTarget = false,  IsReady                             = function() return (FindItemSlot("TiamatCleave") ~= nil and myHero:CanUseSpell(FindItemSlot("TiamatCleave")) == READY) end, Damage = function(target) return getDmg("TIAMAT", target, myHero) end},
-Bork        = { Range = 450 , Slot   = function() return FindItemSlot("SwordOfFeastAndFamine") end,  reqTarget = true,  IsReady                     = function() return (FindItemSlot("SwordOfFeastAndFamine") ~= nil and myHero:CanUseSpell(FindItemSlot("SwordOfFeastAndFamine")) == READY) end, Damage = function(target) return getDmg("RUINEDKING", target, myHero) end},
-Bwc         = { Range = 400 , Slot   = function() return FindItemSlot("BilgewaterCutlass") end,  reqTarget = true,  IsReady                         = function() return (FindItemSlot("BilgewaterCutlass") ~= nil and myHero:CanUseSpell(FindItemSlot("BilgewaterCutlass")) == READY) end, Damage = function(target) return getDmg("BWC", target, myHero) end},
-Hextech     = { Range = 400 , Slot   = function() return FindItemSlot("HextechGunblade") end,  reqTarget = true,    IsReady                         = function() return (FindItemSlot("HextechGunblade") ~= nil and myHero:CanUseSpell(FindItemSlot("HextechGunblade")) == READY) end, Damage = function(target) return getDmg("HXG", target, myHero) end},
-Blackfire   = { Range = 750 , Slot   = function() return FindItemSlot("BlackfireTorch") end,  reqTarget = true,   IsReady                           = function() return (FindItemSlot("BlackfireTorch") ~= nil and myHero:CanUseSpell(FindItemSlot("BlackfireTorch")) == READY) end, Damage = function(target) return getDmg("BLACKFIRE", target, myHero) end},
-Youmuu      = { Range = 350 , Slot   = function() return FindItemSlot("YoumusBlade") end,  reqTarget = false,  IsReady                              = function() return (FindItemSlot("YoumusBlade") ~= nil and myHero:CanUseSpell(FindItemSlot("YoumusBlade")) == READY) end, Damage = function(target) return 0 end},
-Randuin     = { Range = 500 , Slot   = function() return FindItemSlot("RanduinsOmen") end,  reqTarget = false,  IsReady                             = function() return (FindItemSlot("RanduinsOmen") ~= nil and myHero:CanUseSpell(FindItemSlot("RanduinsOmen")) == READY) end, Damage = function(target) return 0 end},
-TwinShadows = { Range = 1000, Slot   = function() return FindItemSlot("ItemWraithCollar") end,  reqTarget = false,  IsReady                         = function() return (FindItemSlot("ItemWraithCollar") ~= nil and myHero:CanUseSpell(FindItemSlot("ItemWraithCollar")) == READY) end, Damage = function(target) return 0 end},
+    Tiamat      = { Range = 400 , Slot   = function() return FindItemSlot("TiamatCleave") end,  reqTarget = false,  IsReady                             = function() return (FindItemSlot("TiamatCleave") ~= nil and myHero:CanUseSpell(FindItemSlot("TiamatCleave")) == READY) end, Damage = function(target) return getDmg("TIAMAT", target, myHero) end},
+    Bork        = { Range = 450 , Slot   = function() return FindItemSlot("SwordOfFeastAndFamine") end,  reqTarget = true,  IsReady                     = function() return (FindItemSlot("SwordOfFeastAndFamine") ~= nil and myHero:CanUseSpell(FindItemSlot("SwordOfFeastAndFamine")) == READY) end, Damage = function(target) return getDmg("RUINEDKING", target, myHero) end},
+    Bwc         = { Range = 400 , Slot   = function() return FindItemSlot("BilgewaterCutlass") end,  reqTarget = true,  IsReady                         = function() return (FindItemSlot("BilgewaterCutlass") ~= nil and myHero:CanUseSpell(FindItemSlot("BilgewaterCutlass")) == READY) end, Damage = function(target) return getDmg("BWC", target, myHero) end},
+    Hextech     = { Range = 400 , Slot   = function() return FindItemSlot("HextechGunblade") end,  reqTarget = true,    IsReady                         = function() return (FindItemSlot("HextechGunblade") ~= nil and myHero:CanUseSpell(FindItemSlot("HextechGunblade")) == READY) end, Damage = function(target) return getDmg("HXG", target, myHero) end},
+    Blackfire   = { Range = 750 , Slot   = function() return FindItemSlot("BlackfireTorch") end,  reqTarget = true,   IsReady                           = function() return (FindItemSlot("BlackfireTorch") ~= nil and myHero:CanUseSpell(FindItemSlot("BlackfireTorch")) == READY) end, Damage = function(target) return getDmg("BLACKFIRE", target, myHero) end},
+    Youmuu      = { Range = 350 , Slot   = function() return FindItemSlot("YoumusBlade") end,  reqTarget = false,  IsReady                              = function() return (FindItemSlot("YoumusBlade") ~= nil and myHero:CanUseSpell(FindItemSlot("YoumusBlade")) == READY) end, Damage = function(target) return 0 end},
+    Randuin     = { Range = 500 , Slot   = function() return FindItemSlot("RanduinsOmen") end,  reqTarget = false,  IsReady                             = function() return (FindItemSlot("RanduinsOmen") ~= nil and myHero:CanUseSpell(FindItemSlot("RanduinsOmen")) == READY) end, Damage = function(target) return 0 end},
+    TwinShadows = { Range = 1000, Slot   = function() return FindItemSlot("ItemWraithCollar") end,  reqTarget = false,  IsReady                         = function() return (FindItemSlot("ItemWraithCollar") ~= nil and myHero:CanUseSpell(FindItemSlot("ItemWraithCollar")) == READY) end, Damage = function(target) return 0 end},
 }
+
+local DefensiveItems = {
+    Zhonyas = { Slot = function() return FindItemSlot("ZhonyasHourglass") end, IsReady = function() return (FindItemSlot("ZhonyasHourglass") ~= nil and myHero:CanUseSpell(FindItemSlot("ZhonyasHourglass")) == READY) end}
+}
+
 
 local priorityTable = {
     p5 = {"Alistar", "Amumu", "Blitzcrank", "Braum", "ChoGath", "DrMundo", "Garen", "Gnar", "Hecarim", "Janna", "JarvanIV", "Leona", "Lulu", "Malphite", "Nami", "Nasus", "Nautilus", "Nunu","Olaf", "Rammus", "Renekton", "Sejuani", "Shen", "Shyvana", "Singed", "Sion", "Skarner", "Sona","Soraka", "Taric", "Thresh", "Volibear", "Warwick", "MonkeyKing", "Yorick", "Zac", "Zyra"},
@@ -59,7 +64,6 @@ local Colors = {
     White   =  ARGB(255, 255, 255, 255),
     Blue    =  ARGB(255, 0, 0, 255),
 }
-
 
 local ORBWALKER_MODE = {Combo = 0, Harass = 1, Clear = 3, LastHit = 4, None = -1}
 
@@ -111,11 +115,847 @@ function OnLoad()
         champ = _Riven()
     elseif myHero.charName == "Xerath" then
         champ = _Xerath()
+
+    elseif myHero.charName == "Orianna" then
+        champ = _Orianna()
     end
 
     if champ~=nil then
         PrintMessage(champ.ScriptName.." by "..champ.Author.." Loaded, Have Fun!.")
     end
+end
+
+class "_Lissandra"
+function _Lissandra:__init()
+    self.ScriptName = "The Ice Witch"
+    self.Author = "iCreative"
+    self.MenuLoaded = false
+    self.Menu = nil
+    self.Passive = { Damage = function(target) return getDmg("P", target, myHero) end, IsReady = false}
+    self.AA = {            Range = function(target) local int1 = 0 if ValidTarget(target) then int1 = GetDistance(target.minBBox, target)/2 end return myHero.range + GetDistance(myHero, myHero.minBBox) + int1 end, Damage = function(target) return getDmg("AD", target, myHero) end }
+    self.Q  = { Slot = _Q, Range = 715, MinRange = 715, MaxRange = 815, Width = 100, Delay = 0.5, Speed = 1300, LastCastTime = 0, Collision = false, Aoe = true, Type = "linear", LastRequest2 = 0, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero) end, LastRange = 0}
+    self.W  = { Slot = _W, Range = 450, Width = 450, Delay = 0.5, Speed = math.huge, LastCastTime = 0, Collision = false, Aoe = true, Type = "circular", IsReady = function() return (myHero:CanUseSpell(_W) == 3 or myHero:CanUseSpell(_W) == READY) end, Mana = function() return myHero:GetSpellData(_W).mana end, Damage = function(target) return getDmg("W", target, myHero) end}
+    self.E  = { Slot = _E, Range = 1050, Width = 110, Delay = 0.5, Speed = 850, LastCastTime = 0, Collision = false, Aoe = true, Type = "linear", IsReady = function() return myHero:CanUseSpell(_E) == READY end, Mana = function() return myHero:GetSpellData(_E).mana end, Damage = function(target) return getDmg("E", target, myHero) end, CastObj = nil, EndObj = nil, MissileObj = nil}
+    self.R  = { Slot = _R, Range = 550, Width = 550, Delay = 0, Speed = math.huge, LastCastTime = 0, Collision = false, Aoe = true, Type = "circular", IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end}
+    self:LoadVariables()
+    self:LoadMenu()
+end
+
+function _Lissandra:LoadVariables()
+    self.TS = TargetSelector(TARGET_LESS_CAST_PRIORITY, self.E.Range, DAMAGE_MAGIC)
+    self.EnemyMinions = minionManager(MINION_ENEMY, 900, myHero, MINION_SORT_MAXHEALTH_DEC)
+    self.JungleMinions = minionManager(MINION_JUNGLE, 700, myHero, MINION_SORT_MAXHEALTH_DEC)
+    self.Menu = scriptConfig(self.ScriptName.." by "..self.Author, self.ScriptName.."25042015")
+end
+
+function _Lissandra:LoadMenu()
+    self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
+        self.Menu.TS:addTS(self.TS)
+        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
+        self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useW","Use W", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useE","Use E", SCRIPT_PARAM_LIST, 2, { "Never", "If Needed" ,"Always"})
+        self.Menu.Combo:addParam("useR","Use R If Enemies >=", SCRIPT_PARAM_SLICE, 3, 0, 5, 0)
+        self.Menu.Combo:addParam("useR2","Use R In Target If Is Killable", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("Zhonyas","Use Zhonyas if %hp <", SCRIPT_PARAM_SLICE, 15, 0, 100)
+        self.Menu.Combo:addParam("useItems","Use Items", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Harass Settings", "Harass")
+        self.Menu.Harass:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Harass:addParam("useW","Use W", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("useE","Use E", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 30, 0, 100)
+    
+    self.Menu:addSubMenu(myHero.charName.." - LaneClear Settings", "LaneClear")
+        self.Menu.LaneClear:addParam("useQ", "Use Q If Hit >= ", SCRIPT_PARAM_SLICE, 3, 0, 10)
+        self.Menu.LaneClear:addParam("useW", "Use W If Hit >=", SCRIPT_PARAM_SLICE, 3, 0, 10)
+        self.Menu.LaneClear:addParam("useE", "Use E If Hit >=", SCRIPT_PARAM_SLICE, 3, 0, 10)
+        self.Menu.LaneClear:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 30, 0, 100)
+
+    self.Menu:addSubMenu(myHero.charName.." - JungleClear Settings", "JungleClear")
+        self.Menu.JungleClear:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.JungleClear:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.JungleClear:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
+
+    self.Menu:addSubMenu(myHero.charName.." - KillSteal Settings", "KillSteal")
+        self.Menu.KillSteal:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.KillSteal:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.KillSteal:addParam("useIgnite", "Use Ignite", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Auto Settings", "Auto")
+        self.Menu.Auto:addSubMenu("Use R To Interrupt", "useR")
+            self.Int = _Interrupter(self.Menu.Auto.useR, self.R.Range + 500)
+            self.Int:CheckChannelingSpells()
+            self.Int:RegisterCallback(function(target, time, timeLimit) self:ForceR(target, time, timeLimit) end)
+
+    self.Menu:addSubMenu(myHero.charName.." - Misc Settings", "Misc")
+        self.Menu.Misc:addParam("predictionType",  "Type of prediction", SCRIPT_PARAM_LIST, 1, PredictionTable)
+        if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then self.Menu.Misc:addParam("ExtraTime","DPred Extra Time", SCRIPT_PARAM_SLICE, 0.13, 0, 1, 1) end
+        self.Menu.Misc:addParam("overkill", "Overkill % for Dmg Predict..", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+        if #GetEnemyHeroes() > 0 then
+        self.Menu:addSubMenu("Don't Use R On: ", "DontR")
+            for idx, enemy in ipairs(GetEnemyHeroes()) do
+                self.Menu.Misc.DontR:addParam(enemy.charName, enemy.charName, SCRIPT_PARAM_ONOFF, false)
+            end
+        end
+        self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
+
+    self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
+        self.Menu.Draw:addSubMenu("Q", "Q")
+            self.Menu.Draw.Q:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.Q:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.Q:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.Q:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
+        self.Menu.Draw:addSubMenu("W", "W")
+            self.Menu.Draw.W:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.W:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.W:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.W:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.W.Range/5 + 10)/2), 40), 10, math.round(self.W.Range/5))
+        self.Menu.Draw:addSubMenu("E", "E")
+            self.Menu.Draw.E:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.E:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.E:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.E:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
+        self.Menu.Draw:addSubMenu("R", "R")
+            self.Menu.Draw.R:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.R:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.R:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.R:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
+        OM:LoadKeys(self.Menu.Keys)
+        self.Menu.Keys:addParam("HarassToggle", "Harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("L"))
+        self.Menu.Keys:addParam("Run", "Run", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
+        self.Menu.Keys.Flee = false
+        self.Menu.Keys.HarassToggle = false
+        self.Menu.Keys:permaShow("HarassToggle")
+end
+
+function _Lissandra:ForceR(target, time, timeLimit)
+    if not ValidTarget(target) or os.clock() - time > timeLimit then return end
+    if self.R.IsReady() and ValidTarget(target, self.R.Range + 500) then
+        self:CastR(target)
+    end
+    if ValidTarget(target, self.R.Range + 500) then
+        DelayAction(function(target, time, timeLimit) self:ForceR(target, time, timeLimit) end, 0.1, {target, time, timeLimit})
+    end
+end
+
+function _Lissandra:CastR(champion)
+    if self.R.IsReady() then
+        if champion.team == myHero.team then
+            CastSpell(self.R.Slot, champion)
+        elseif ValidTarget(champion, self.R.Range) and not self.Menu.Misc.DontR[champion.charName] then
+            CastSpell(self.R.Slot, champion)
+        end
+    end
+end
+
+class "_Orianna"
+function _Orianna:__init()
+    self.ScriptName = "The Ball Is Angry"
+    self.Author = "iCreative"
+    self.MenuLoaded = false
+    self.Menu = nil
+    self.Passive = { Damage = function(target) return getDmg("P", target, myHero) end, IsReady = false}
+    self.AA = {            Range = function(target) local int1 = 0 if ValidTarget(target) then int1 = GetDistance(target.minBBox, target)/2 end return myHero.range + GetDistance(myHero, myHero.minBBox) + int1 end, Damage = function(target) return getDmg("AD", target, myHero) end }
+    self.Q  = { Slot = _Q, Range = 825, Width = 130, Delay = 0, Speed = 1200, Type = "linear", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero) end}
+    self.W  = { Slot = _W, Range = 225, Width = 225, Delay = 0.15, Speed = math.huge, Type = "circular", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_W) == READY end, Mana = function() return myHero:GetSpellData(_W).mana end, Damage = function(target) return getDmg("W", target, myHero) end}
+    self.E  = { Slot = _E, Range = 1095, Width = 85, Delay = 0.15, Speed = 1700, Type = "linear", LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_E) == READY end, Mana = function() return myHero:GetSpellData(_E).mana end, Damage = function(target) return getDmg("E", target, myHero) end, Missile = nil}
+    self.R  = { Slot = _R, Range = 370, Width = 370, Delay = 0.3, Speed = math.huge, Type = "circular", LastCastTime = 0, Collision = false, Aoe = true, ControlPressed = false, Sent = 0, IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end}
+    self:LoadVariables()
+    self:LoadMenu()
+end
+
+function _Orianna:LoadVariables()
+    self.TS = TargetSelector(TARGET_LESS_CAST_PRIORITY, self.Q.Range + self.Q.Width, DAMAGE_MAGIC)
+    self.EnemyMinions = minionManager(MINION_ENEMY, self.Q.Range + self.Q.Width, myHero, MINION_SORT_MAXHEALTH_DEC)
+    self.JungleMinions = minionManager(MINION_JUNGLE, 600, myHero, MINION_SORT_MAXHEALTH_DEC)
+    self.Menu = scriptConfig(self.ScriptName.." by "..self.Author, self.ScriptName.."24042015")
+    self.LastFarmRequest = 0
+end
+
+function _Orianna:LoadMenu()
+    self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
+        self.Menu.TS:addTS(self.TS)
+        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
+        self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useW", "Use W If Enemies >= ", SCRIPT_PARAM_SLICE, 1, 0, 5)
+        self.Menu.Combo:addParam("useE","Use E For Damage", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useE2","Use E If % Health <=", SCRIPT_PARAM_SLICE, 40, 0, 100, 0)
+        self.Menu.Combo:addParam("useR","Use R If Killable", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useR2","Use R If Enemies >=", SCRIPT_PARAM_SLICE, 3, 0, 5)
+        self.Menu.Combo:addParam("useIgnite","Use Ignite If Killable", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Harass Settings", "Harass")
+        self.Menu.Harass:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Harass:addParam("useW","Use W", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Harass:addParam("useE","Use E For Damage", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("useE2","Use E If % Health <=", SCRIPT_PARAM_SLICE, 40, 0, 100, 0)
+        self.Menu.Harass:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
+
+    self.Menu:addSubMenu(myHero.charName.." - LaneClear Settings", "LaneClear")
+        self.Menu.LaneClear:addParam("useQ", "Use Q If Hit >= ", SCRIPT_PARAM_SLICE, 3, 0, 10)
+        self.Menu.LaneClear:addParam("useW", "Use W If Hit >=", SCRIPT_PARAM_SLICE, 3, 0, 10)
+        self.Menu.LaneClear:addParam("useE", "Use E If Hit >=", SCRIPT_PARAM_SLICE, 3, 0, 10)
+        self.Menu.LaneClear:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
+
+    self.Menu:addSubMenu(myHero.charName.." - JungleClear Settings", "JungleClear")
+        self.Menu.JungleClear:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.JungleClear:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.JungleClear:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - LastHit Settings", "LastHit")
+        self.Menu.LastHit:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.LastHit:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.LastHit:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.LastHit:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
+
+    self.Menu:addSubMenu(myHero.charName.." - KillSteal Settings", "KillSteal")
+        self.Menu.KillSteal:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.KillSteal:addParam("useIgnite", "Use Ignite", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Auto Settings", "Auto")
+        self.Menu.Auto:addSubMenu("Use R To Interrupt", "useR")
+            self.Int = _Interrupter(self.Menu.Auto.useR, self.Q.Range + self.R.Range)
+            self.Int:CheckChannelingSpells()
+            self.Int:RegisterCallback(function(target, time, timeLimit) self:ForceR(target, time, timeLimit) end)
+
+        self.Menu.Auto:addSubMenu("Use E To Initiate", "useE")
+            self.Ini = _Initiator(self.Menu.Auto.useE, self.E.Range + 500)
+            self.Ini:CheckGapcloserSpells()
+            self.Ini:RegisterCallback(function(target, time, timeLimit) self:ForceE(target, time, timeLimit) end)
+
+        self.Menu.Auto:addParam("useW", "Use W If Enemies >= ", SCRIPT_PARAM_SLICE, 3, 0, 5)
+        self.Menu.Auto:addParam("useR", "Use R If Enemies >= ", SCRIPT_PARAM_SLICE, 4, 0, 5)
+
+    self.Menu:addSubMenu(myHero.charName.." - Misc Settings", "Misc")
+        self.Menu.Misc:addParam("predictionType",  "Type of prediction", SCRIPT_PARAM_LIST, 1, PredictionTable)
+        if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then self.Menu.Misc:addParam("ExtraTime","DPred Extra Time", SCRIPT_PARAM_SLICE, 0.13, 0, 1, 1) end
+        self.Menu.Misc:addParam("overkill", "Overkill % for Dmg Predict..", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+        if VIP_USER then self.Menu.Misc:addParam("BlockR", "Block R If Will Not Hit", SCRIPT_PARAM_ONOFF, true) end
+        self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
+
+    self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
+        self.Menu.Draw:addSubMenu("Q", "Q")
+            self.Menu.Draw.Q:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.Q:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.Q:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.Q:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
+        self.Menu.Draw:addSubMenu("W", "W")
+            self.Menu.Draw.W:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.W:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.W:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.W:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.W.Range/5 + 10)/2), 40), 10, math.round(self.W.Range/5))
+        self.Menu.Draw:addSubMenu("E", "E")
+            self.Menu.Draw.E:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.E:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.E:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.E:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
+        self.Menu.Draw:addSubMenu("R", "R")
+            self.Menu.Draw.R:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.R:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.R:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.R:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        self.Menu.Draw:addSubMenu("Ball Position", "BallPosition")
+            self.Menu.Draw.BallPosition:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.BallPosition:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.BallPosition:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.BallPosition:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, 10, 10, math.round(self.Q.Width/5))
+        self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
+        OM:LoadKeys(self.Menu.Keys)
+        self.Menu.Keys:addParam("HarassToggle", "Harass (Toggle)", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("L"))
+        self.Menu.Keys:addParam("Run", "Run", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
+
+        self.Menu.Keys:permaShow("HarassToggle")
+        self.Menu.Keys.HarassToggle = false
+        self.Menu.Keys.Run = false
+
+    AddTickCallback(
+        function()
+            if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
+            self.TS.range = self.Q.Range + self.Q.Width
+            self.TS.target = _GetTarget()
+            if OM.Mode == ORBWALKER_MODE.Combo then self:Combo()
+            elseif OM.Mode == ORBWALKER_MODE.Harass then self:Harass()
+            elseif OM.Mode == ORBWALKER_MODE.Clear then self:Clear() 
+            elseif OM.Mode == ORBWALKER_MODE.LastHit then self:LastHit()
+            end
+
+            if self.Menu.KillSteal.useQ or self.Menu.KillSteal.useW or self.Menu.KillSteal.useE or self.Menu.KillSteal.useR or self.Menu.KillSteal.useIgnite then self:KillSteal() end
+
+            if ValidTarget(self.TS.target) and (self.Menu.Auto.useW > 0 or self.Menu.Auto.useR > 0) then self:Auto() end
+
+            if self.Menu.Keys.HarassToggle then self:Harass() end
+            if self.Menu.Keys.Run then self:Run() end
+        end
+    )
+
+    AddProcessSpellCallback(
+        function(unit, spell)
+            if myHero.dead or unit == nil or not self.MenuLoaded then return end
+            if not unit.isMe then return end
+            if spell.name:lower():find("oriana") and spell.name:lower():find("izuna") and spell.name:lower():find("command") then self.Q.LastCastTime = os.clock()
+            elseif spell.name:lower():find("oriana") and spell.name:lower():find("dissonance") and spell.name:lower():find("command") then self.W.LastCastTime = os.clock()
+            elseif spell.name:lower():find("oriana") and spell.name:lower():find("redact") and spell.name:lower():find("command") then self.E.LastCastTime = os.clock()
+            elseif spell.name:lower():find("oriana") and spell.name:lower():find("detonate") and spell.name:lower():find("command") then self.R.LastCastTime = os.clock()
+            end
+        end
+    )
+
+    AddDrawCallback(
+        function()
+            if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
+            if self.Menu.Draw.dmgCalc then DrawPredictedDamage() end
+            if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
+                local source = self.TS.target
+                DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
+            end
+        
+            if self.Menu.TS.Range then
+                DrawCircle3D(myHero.x, myHero.y, myHero.z, self.TS.range, 1, Colors.Red, 40)
+            end
+        
+            if self.Menu.Draw.Q.Enable and self.Q.IsReady() then
+                local source    = myHero
+                local color     = self.Menu.Draw.Q.Color
+                local width     = self.Menu.Draw.Q.Width
+                local range     =           self.Q.Range
+                local quality   = self.Menu.Draw.Q.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        
+            if self.Menu.Draw.W.Enable and self.W.IsReady() then
+                local source    = self.Position
+                local color     = self.Menu.Draw.W.Color
+                local width     = self.Menu.Draw.W.Width
+                local range     =           self.W.Range
+                local quality   = self.Menu.Draw.W.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        
+            if self.Menu.Draw.E.Enable and self.E.IsReady() then
+                local source    = myHero
+                local color     = self.Menu.Draw.E.Color
+                local width     = self.Menu.Draw.E.Width
+                local range     =           self.E.Range
+                local quality   = self.Menu.Draw.E.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        
+            if self.Menu.Draw.R.Enable and self.R.IsReady() then
+                local source    = self.Position
+                local color     = self.Menu.Draw.R.Color
+                local width     = self.Menu.Draw.R.Width
+                local range     =           self.R.Range
+                local quality   = self.Menu.Draw.R.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+
+            if self.Menu.Draw.BallPosition.Enable then
+                local source    = self.Position
+                local color     = self.Menu.Draw.BallPosition.Color
+                local width     = self.Menu.Draw.BallPosition.Width
+                local range     =           self.Q.Width
+                local quality   = self.Menu.Draw.BallPosition.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        end
+    )
+
+
+    --BALL MANAGER
+    self.Position = myHero
+    self.TimeLimit = 0.1
+    self.ValidDistance = 2000
+    for i = 1, objManager.maxObjects do
+        local object = objManager:getObject(i)
+        if object and object.name and object.valid and object.name:lower():find("doomball") then
+            self.Position = object
+        end
+    end
+
+    AddAnimationCallback(
+        function(unit, animation)
+            if unit.isMe and animation == 'Prop' then
+                self.Position = myHero
+            end
+        end
+    )
+
+    AddCreateObjCallback(
+        function(obj) 
+            if obj.name:lower():find("orianna") and obj.name:lower():find("yomu") and obj.name:lower():find("ring") and obj.name:lower():find("green") then
+                self.Position = obj
+            elseif obj.name:lower():find("orianna") and obj.name:lower():find("ball") and obj.name:lower():find("flash") then
+                self.Position = myHero
+            elseif obj.name:lower():find("linemissile") and obj.spellOwner.isMe then
+                self.Position = obj
+            end
+        end
+    )
+    AddDeleteObjCallback(
+        function(obj) 
+            if obj.name:lower():find("orianna") and obj.name:lower():find("yomu") and obj.name:lower():find("ring") and obj.name:lower():find("green") and GetDistanceSqr(myHero, obj) < 150 * 150 then
+                self.Position = myHero
+            end
+        end
+     )
+    AddProcessSpellCallback(
+        function(unit, spell)
+            if unit and spell and unit.isMe and spell.name:lower():find("oriana") and spell.name:lower():find("redact") and spell.name:lower():find("command") then
+                DelayAction(function(pos) self.Position = pos end, self.E.Delay + GetDistance(spell.endPos, self.Position) / self.E.Speed, {spell.target})
+            end
+        end
+    )
+    AddTickCallback(
+        function() 
+            if not self.Position.valid or GetDistanceSqr(myHero, self.Position) > self.ValidDistance * self.ValidDistance then 
+                self.Position = myHero 
+            end 
+        end
+    )
+    if VIP_USER then 
+        HookPackets() 
+    end
+    if VIP_USER then
+        AddCastSpellCallback(
+            function(iSpell, startPos, endPos, targetUnit) 
+                if iSpell == self.R.Slot and #self:ObjectsInArea(self.R.Range, self.R.Delay, GetEnemyHeroes()) == 0  then
+                    self.R.Sent = os.clock()
+                end
+            end
+        )
+    end
+    if VIP_USER then 
+        AddSendPacketCallback(
+            function(p)
+                p.pos = 2
+                if myHero.networkID == p:DecodeF() then
+                    if self.Menu.Misc.BlockR and os.clock() - self.R.Sent < self.TimeLimit and self.R.Sent > 0 and self.R.IsReady() then
+                            Packet(p):block()
+                    end
+                end
+            end
+        ) 
+    end
+    self.MenuLoaded = true
+end
+
+function _Orianna:ObjectsInArea(range, delay, array)
+    local objects2 = {}
+    local delay = delay or 0
+    if array ~= nil then
+        for i, object in ipairs(array) do
+            if ValidTarget(object, self.Q.Range * 2.5) then
+                local Position = prediction:GetPredictedPos(object, delay)
+                if GetDistanceSqr(self.Position, Position) <= range * range then
+                    table.insert(objects2, object)
+                end
+            end
+        end
+    end
+    return objects2
+end
+
+function _Orianna:CastQ(target)
+    if ValidTarget(target, self.Q.Range + self.W.Width / 2) and self.Q.IsReady() then
+        local delay = self.Q.Delay --+ (GetDistance(p1, p2)/Q.Speed - 1)
+        local range = GetDistance(self.Position, target) --+ W.Width / 2 --Q.Range
+        prediction:SetSource(self.Position)
+        local CastPosition,  HitChance,  Position = prediction:GetPrediction(target, self.Q)
+        if CastPosition~=nil and HitChance >= 2 then
+            CastSpell(self.Q.Slot, CastPosition.x, CastPosition.z)
+        end
+    end
+end
+
+function _Orianna:CastW(target)
+    if self.W.IsReady() and ValidTarget(target, self.Q.Range + self.W.Width/2) then
+        local Position = prediction:GetPredictedPos(target, self.W.Delay)
+        if GetDistanceSqr(self.Position, Position) < self.W.Range * self.W.Range then 
+            CastSpell(self.W.Slot)
+        end
+    end
+end
+
+function _Orianna:CastE(unit)
+    if unit ~= nil then
+        if self.E.IsReady() and unit.valid and unit.team == myHero.team and GetDistanceSqr(myHero, unit) < self.E.Range * self.E.Range then
+            CastSpell(self.E.Slot, unit)
+        elseif self.E.IsReady() and unit.valid and unit.team ~= myHero.team then
+            local table = nil
+            if unit.type:lower():find("hero") then 
+                table = GetEnemyHeroes()
+            else 
+                self.EnemyMinions:update()
+                if #self.EnemyMinions.objects > 0 then
+                    table = self.EnemyMinions.objects 
+                else
+                    self.JungleMinions:update()
+                    if #self.JungleMinions.objects > 0 then
+                        table = self.JungleMinions.objects
+                    end
+                end
+            end
+            if table~= nil then
+                local BestPos, BestHit = self:BestHitE(table)
+                if BestHit~=nil and BestHit > 0 and BestPos~=nil and BestPos.team == myHero.team then
+                    self:CastE(BestPos)
+                end
+            end
+        end
+    end
+end
+
+function _Orianna:CastR(target)
+    if self.R.IsReady() and ValidTarget(target, self.Q.Range + self.R.Range) then
+        local Position = prediction:GetPredictedPos(target, self.R.Delay)
+        if GetDistanceSqr(Position, self.Position) < self.R.Range * self.R.Range then
+            CastSpell(self.R.Slot)
+        end
+    end
+end
+
+
+
+function _Orianna:Combo()
+    local target = self.TS.target
+    if ValidTarget(target) then
+        if self.Menu.Combo.useIgnite and Ignite.IsReady() and ValidTarget(target, Ignite.Range) then 
+            local q, w, e, r, dmg = GetBestCombo(target)
+            if dmg >= target.health and target.health > 0 then
+                CastIgnite(target)
+            end
+        end
+        if self.Menu.Combo.useE then
+            self:CastE(target)
+        end
+
+        if self.Menu.Combo.useE2 > 0 and myHero.health/myHero.maxHealth * 100 <= self.Menu.Combo.useE2 then
+            self:CastE(myHero)
+        end
+
+        if self.Menu.Combo.useQ then 
+            self:CastQ(target) 
+        end
+        if self.W.IsReady() and self.Menu.Combo.useW > 0 and #self:ObjectsInArea(self.W.Range, self.W.Delay, GetEnemyHeroes()) >= self.Menu.Combo.useW then
+            CastSpell(self.W.Slot)
+        end
+        if self.Menu.Combo.useR and self.R.IsReady() and #self:ObjectsInArea(self.R.Range, self.R.Delay, GetEnemyHeroes()) <= 2 then
+            local q, w, e, r, dmg = GetBestCombo(target)
+            if dmg >= target.health and r then
+                self:CastR(target)
+            end
+        end
+        if self.R.IsReady() and self.Menu.Combo.useR2 > 0 and self.Menu.Combo.useR2 <= #self:ObjectsInArea(self.R.Range, self.R.Delay, GetEnemyHeroes()) then
+            CastSpell(self.R.Slot)
+        end
+    end
+end
+
+function _Orianna:Harass()
+    local target = self.TS.target
+    if ValidTarget(target) and myHero.mana/myHero.maxMana * 100 >= self.Menu.Harass.Mana then
+        if self.Menu.Harass.useE then self:CastE(target) end
+        if self.Menu.Harass.useE2 > 0 and myHero.health/myHero.maxHealth * 100 <= self.Menu.Harass.useE2 and ValidTarget(target, GetAARange(target)) then self:CastE(myHero) end
+        if self.Menu.Harass.useW then self:CastW(target) end
+        if self.Menu.Harass.useQ then self:CastQ(target) end
+    end
+end
+
+function _Orianna:Clear()
+    if myHero.mana/myHero.maxMana * 100 >= self.Menu.LaneClear.Mana then
+        self.EnemyMinions:update()
+        for i, minion in pairs(self.EnemyMinions.objects) do
+            if ValidTarget(minion, self.Q.Range + self.Q.Width) and os.clock() - self.LastFarmRequest > 0.2 then 
+                if self.Menu.LaneClear.useE > 0 and self.E.IsReady() then
+                    local BestPos, Count = self:BestHitE(self.EnemyMinions.objects)
+                    if BestPos~=nil and self.Menu.LaneClear.useE <= Count then
+                        self:CastE(BestPos)
+                    end
+                end
+
+                if self.Menu.LaneClear.useQ > 0 and self.Q.IsReady() then
+                    local BestPos, Count = self:BestHitQ(self.EnemyMinions.objects)
+                    if BestPos~=nil and self.Menu.LaneClear.useQ <= Count then
+                        self:CastQ(BestPos)
+                    end
+                end
+
+                if self.Menu.LaneClear.useW > 0 and self.W.IsReady() then
+                    local Count = #self:ObjectsInArea(self.W.Range, self.W.Delay, self.EnemyMinions.objects)
+                    if self.Menu.LaneClear.useW <= Count then 
+                        CastSpell(self.W.Slot)
+                    end
+                end
+                self.LastFarmRequest = os.clock()
+            end
+        end
+    end
+
+    self.JungleMinions:update()
+    for i, minion in pairs(self.JungleMinions.objects) do
+        if ValidTarget(minion, self.Q.Range + self.Q.Width) then 
+            if self.Menu.JungleClear.useE and self.E.IsReady() then
+                self:CastE(minion)
+            end
+
+            if self.Menu.JungleClear.useQ and self.Q.IsReady() then
+                CastSpell(self.Q.Slot, minion.x, minion.z)
+            end
+
+            if self.Menu.JungleClear.useW and self.W.IsReady() then
+                self:CastW(minion)
+            end
+        end
+    end
+end
+
+
+function _Orianna:ThrowBallTo(target, width)
+    local EAlly = nil
+    if self.E.IsReady() and GetDistanceSqr(self.Position, target) > width * width then
+        
+        local Position = prediction:GetPredictedPos(target, self.E.Delay + GetDistance(self.Position, target)/self.E.Speed)
+        for i = 1, heroManager.iCount do
+            local ally = heroManager:GetHero(i)
+            if ally.team == player.team and GetDistanceSqr(myHero, ally) < self.E.Range * self.E.Range and GetDistanceSqr(self.Position, ally) > 50 * 50  then
+                local Position3 = prediction:GetPredictedPos(ally, self.E.Delay + GetDistance(self.Position, ally)/self.E.Speed)
+                if GetDistanceSqr(Position3, Position) <= width * width then
+                    if EAlly == nil then 
+                        EAlly = ally
+                    else
+                        local Position2 = prediction:GetPredictedPos(EAlly, self.E.Delay + GetDistance(self.Position, EAlly)/self.E.Speed)
+                        if GetDistanceSqr(Position, Position2) > GetDistanceSqr(Position, Position3) then 
+                            EAlly = ally
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if EAlly~=nil and GetDistanceSqr(EAlly, target) <= width * width then
+        self:CastE(EAlly)
+    elseif self.Q.IsReady() then
+        self:CastQ(target)
+    end
+end
+
+function _Orianna:BestHitQ(objects)
+    local BestPos 
+    local BestHit = 0
+
+    local function CountObjectsOnLineSegment(StartPos, EndPos, width, objects2)
+        local n = 0
+        for i, object in ipairs(objects2) do
+            local Position = prediction:GetPredictedPos(object, self.Q.Delay + GetDistance(StartPos, object)/self.Q.Speed)
+            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, Position)
+            local w = width --+ VP:GetHitBox(object) / 3
+            if isOnSegment and GetDistanceSqr(pointSegment, Position) < w * w and GetDistanceSqr(StartPos, EndPos) > GetDistanceSqr(StartPos, Position) then
+                n = n + 1
+            end
+        end
+        return n
+    end
+    for i, object in ipairs(objects) do
+        if ValidTarget(object, self.Q.Range) then
+            local Position = prediction:GetPredictedPos(object, self.Q.Delay + GetDistance(self.Position, object)/self.Q.Speed)
+            local hit = CountObjectsOnLineSegment(self.Position, Position, self.Q.Width, objects) + 1
+            if hit > BestHit then
+                BestHit = hit
+                BestPos = object--Vector(object)
+                if BestHit == #objects then
+                   break
+                end
+            end
+        end
+    end
+    return BestPos, BestHit
+end
+
+function _Orianna:BestHitE(objects)
+
+    local function HitE(StartPos, EndPos, width, objects)
+        local n = 0
+        --StartPos = Vector(StartPos.x, 0, StartPos.z)
+        for i, object in ipairs(objects) do
+            local Position = prediction:GetPredictedPos(object, self.E.Delay + GetDistance(StartPos, object)/self.E.Speed)
+            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, Position)
+            local w = width --+ VP:GetHitBox(object) / 3
+            if isOnSegment and GetDistanceSqr(pointSegment, object) < w * w and GetDistanceSqr(StartPos, EndPos) > GetDistanceSqr(StartPos, object) then
+                n = n + 1
+            end
+        end
+        return n
+    end
+
+    local tab = {}
+    local BestAlly = nil 
+    local BestHit = 0
+    for i = 1, heroManager.iCount do
+        local hero = heroManager:GetHero(i)
+        if hero.team == player.team and hero.health > 0 then
+            --print(GetDistance(Vector(ball.Position.x, 0 , ball.Position.z), Vector(hero.x, 0 , hero.z)))
+            if GetDistanceSqr(myHero, hero) < self.E.Range * self.E.Range and GetDistanceSqr(self.Position, hero) > 50 * 50 then
+                local Position = prediction:GetPredictedPos(hero, self.E.Delay + GetDistance(self.Position, hero)/self.E.Speed)
+                local hit = HitE(self.Position, Position, self.E.Width, objects)
+                if hit > BestHit then
+                    BestHit = hit
+                    BestAlly = hero--Vector(hero)
+                    if BestHit == #objects then
+                       break
+                    end
+                end
+            end
+        end
+    end
+    return BestAlly, BestHit
+    -- body
+end
+
+function _Orianna:LastHit()
+    if myHero.mana/myHero.maxMana * 100 >= self.Menu.LastHit.Mana and os.clock() - self.LastFarmRequest > 0.05 then
+        self.EnemyMinions:update()
+        for i, minion in pairs(self.EnemyMinions.objects) do
+            if ((not ValidTarget(minion, self.AA.Range(minion))) or (ValidTarget(minion, self.AA.Range(minion)) and GetDistanceSqr(minion, OM.LastTarget) > 80 * 80 and not OM:CanAttack() and OM:CanMove())) and not minion.dead then
+                if self.Menu.LastHit.useW and self.W.IsReady() and not minion.dead then
+                    local dmg = self.W.Damage(minion)
+                    local time = self.W.Delay
+                    local predHealth, a, b = VP:GetPredictedHealth(minion, time, 0)
+                    if dmg > predHealth then
+                        self:CastW(minion)
+                    end
+                end
+                if self.Menu.LastHit.useQ and self.Q.IsReady() and ValidTarget(minion, self.Q.Range + self.Q.Width/2) and not minion.dead then
+                    local dmg = self.Q.Damage(minion)
+                    local time = self.Q.Delay + GetDistance(minion, self.Position) / self.Q.Speed + OM:Latency() - 100/1000
+                    local predHealth, a, b = VP:GetPredictedHealth(minion, time, 0)
+                    if dmg > predHealth and predHealth > -40 then
+                        CastSpell(self.Q.Slot, minion.x, minion.z)
+                    end
+                end
+                if self.Menu.LastHit.useE and self.E.IsReady() and GetDistanceSqr(myHero, self.Position) > 50 * 50 and GetDistanceSqr(myHero, self.Position) > GetDistanceSqr(myHero, minion) and not minion.dead then
+                    local dmg = self.E.Damage(minion)
+                    local time = self.E.Delay + GetDistance(minion, self.Position) / self.E.Speed + OM:Latency() - 100/1000
+                    local predHealth, a, b = VP:GetPredictedHealth(minion, time, 0)
+                    if dmg > predHealth and predHealth > -40 then
+                        local Position = prediction:GetPredictedPos(minion, self.E.Delay + GetDistance(minion, self.Position) / self.E.Speed)
+                        local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(self.Position, myHero, Position)
+                        if isOnSegment and GetDistanceSqr(pointSegment, object) < self.E.Width * self.E.Width then
+                            CastE(myHero)
+                        end
+                    end
+                end
+            end
+        end
+        self.LastFarmRequest = os.clock()
+    end
+end
+function _Orianna:KillSteal()
+    for idx, enemy in ipairs(GetEnemyHeroes()) do
+        if enemy.health/enemy.maxHealth < 0.4 and ValidTarget(enemy, self.TS.range) and enemy.visible and enemy.health > 0  then
+            local q, w, e, r, dmg = GetBestCombo(enemy)
+            if dmg >= enemy.health and enemy.health > 0 then
+                if self.Q.IsReady() and self.Menu.KillSteal.useQ and (q or self.Q.Damage(enemy) > enemy.health) and not enemy.dead then self:CastQ(enemy) end
+                if self.W.IsReady() and self.Menu.KillSteal.useW and (w or self.W.Damage(enemy) > enemy.health) and not enemy.dead then self:CastW(enemy) end
+                if self.E.IsReady() and self.Menu.KillSteal.useE and (e or self.E.Damage(enemy) > enemy.health) and not enemy.dead then self:CastE(enemy) end
+                if self.R.IsReady() and self.Menu.KillSteal.useR and (r or self.R.Damage(enemy) > enemy.health) and not enemy.dead then self:CastR(enemy) end
+                if (((w or self.W.Damage(enemy) > enemy.health) and self.Menu.KillSteal.useW) or ((r or self.R.Damage(enemy) > enemy.health) and self.Menu.KillSteal.useR)) and (self.Menu.KillSteal.useQ or self.Menu.KillSteal.useE) and not enemy.dead then self:ThrowBallTo(enemy, self.R.Width) end
+            end
+            if self.Menu.KillSteal.useIgnite and Ignite.Damage(enemy) > enemy.health and enemy.health > 0 then CastIgnite(enemy) end
+        end
+    end
+end
+function _Orianna:Auto()
+    if self.W.IsReady() and self.Menu.Auto.useW > 0 and #self:ObjectsInArea(self.W.Range, self.W.Delay, GetEnemyHeroes()) >= self.Menu.Auto.useW then
+        CastSpell(self.W.Slot)
+    end
+    if self.R.IsReady() and self.Menu.Auto.useR > 0 and #self:ObjectsInArea(self.R.Range, self.R.Delay, GetEnemyHeroes()) >= self.Menu.Auto.useR then
+        CastSpell(self.R.Slot)
+    end
+end
+
+function _Orianna:Run()
+    myHero:MoveTo(mousePos.x, mousePos.z)
+    if self.E.IsReady() and GetDistanceSqr(self.Position, self.Position) > self.W.Width * self.W.Width then
+        CastE(myHero)
+    elseif self.Q.IsReady() and GetDistanceSqr(self.Position, myHero) > self.W.Width * self.W.Width then
+        CastSpell(self.Q.Slot, myHero.x, myHero.z)
+    end
+
+    if self.W.IsReady() and GetDistanceSqr(self.Position, myHero) < self.W.Width * self.W.Width then
+        CastSpell(self.W.Slot)
+    end
+end
+
+
+function _Orianna:ForceE(target, time, timeLimit)
+    if os.clock() - time > timeLimit then return end
+    if self.E.IsReady() and GetDistanceSqr(target, myHero) < self.E.Range * self.E.Range and ValidTarget(self.TS.target) then
+        self:CastE(target)
+    end
+    if GetDistanceSqr(target, myHero) < (self.E.Range + 500) * (self.E.Range + 500) then
+        DelayAction(function(target, time, timeLimit) self:ForceE(target, time, timeLimit) end, 0.1, {target, time, timeLimit})
+    end
+end
+
+function _Orianna:ForceR(target, time, timeLimit)
+   if not ValidTarget(target) or os.clock() - time > timeLimit then return end
+    if self.R.IsReady() and GetDistanceSqr(target, self.Position) < self.R.Range * self.R.Range then
+        self:CastR(target)
+    elseif self.Q.IsReady() and GetDistanceSqr(target, self.Position) < (self.Q.Range + self.R.Width) * (self.Q.Range + self.R.Width) then
+        self:ThrowBallTo(target, self.R.Width)
+    end
+    if ValidTarget(target, self.Q.Range + self.R.Width) then
+        DelayAction(function(target, time, timeLimit) self:ForceR(target, time, timeLimit) end, 0.1, {target, time, timeLimit})
+    end
+end
+
+function _Orianna:GetComboDamage(target, q, w, e, r)
+    local comboDamage = 0
+    local currentManaWasted = 0
+    if ValidTarget(target) then
+        if q then
+            comboDamage = comboDamage + self.Q.Damage(target)
+            currentManaWasted = currentManaWasted + self.Q.Mana()
+        end
+        if w then
+            comboDamage = comboDamage + self.W.Damage(target)
+            currentManaWasted = currentManaWasted + self.W.Mana()
+        end
+        if e then
+            comboDamage = comboDamage + self.E.Damage(target)
+            currentManaWasted = currentManaWasted + self.E.Mana()
+        end
+        if r then
+            comboDamage = comboDamage + self.R.Damage(target)
+            currentManaWasted = currentManaWasted + self.R.Mana()
+        end
+        comboDamage = comboDamage + self.AA.Damage(target)
+        comboDamage = comboDamage + DamageItems(target)
+    end
+    comboDamage = comboDamage * self:GetOverkill()
+    return comboDamage, currentManaWasted
+end
+
+function _Orianna:GetOverkill()
+    return (100 + self.Menu.Misc.overkill)/100
 end
 
 class "_Xerath"
@@ -138,8 +978,6 @@ function _Xerath:LoadVariables()
     self.TimeLimit = 0.02
     self.QPacket = 49
     self.DataUpdated = false
-    self.PredictedDamage = {}
-    self.RefreshTime = 0.4
     self.TS = TargetSelector(TARGET_LESS_CAST_PRIORITY, self.Q.MaxRange + self.Q.Offset, DAMAGE_MAGIC)
     self.EnemyMinions = minionManager(MINION_ENEMY, self.Q.MaxRange + self.Q.Offset, myHero, MINION_SORT_MAXHEALTH_DEC)
     self.JungleMinions = minionManager(MINION_JUNGLE, 750, myHero, MINION_SORT_MAXHEALTH_DEC)
@@ -204,33 +1042,33 @@ function _Xerath:LoadMenu()
     self.Menu:addSubMenu(myHero.charName.." - Misc Settings", "Misc")
         self.Menu.Misc:addParam("predictionType",  "Type of prediction", SCRIPT_PARAM_LIST, 1, PredictionTable)
         if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then self.Menu.Misc:addParam("ExtraTime","DPred Extra Time", SCRIPT_PARAM_SLICE, 0.13, 0, 1, 1) end
-        self.Menu.Misc:addParam("overkill","Overkill % for Dmg Predict..", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+        self.Menu.Misc:addParam("overkill", "Overkill % for Dmg Predict..", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
         self.Menu.Misc:addParam("SmartCast", "Using Smart Cast", SCRIPT_PARAM_ONOFF, true)
         self.Menu.Misc:addParam("Bugsplat", "Q is Crashing?", SCRIPT_PARAM_ONOFF, false)
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
         self.Menu.Draw:addSubMenu("Q", "Q")
-            self.Menu.Draw.Q:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.Q:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.Q:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.Q:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
+            self.Menu.Draw.Q:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.Q:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.Q:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.Q:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
         self.Menu.Draw:addSubMenu("W", "W")
-            self.Menu.Draw.W:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.W:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.W:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.W:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.W.Range/5 + 10)/2), 40), 10, math.round(self.W.Range/5))
+            self.Menu.Draw.W:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.W:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.W:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.W:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.W.Range/5 + 10)/2), 40), 10, math.round(self.W.Range/5))
         self.Menu.Draw:addSubMenu("E", "E")
-            self.Menu.Draw.E:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.E:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.E:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.E:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
+            self.Menu.Draw.E:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.E:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.E:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.E:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
         self.Menu.Draw:addSubMenu("R", "R")
-            self.Menu.Draw.R:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.R:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.R:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.R:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
-        self.Menu.Draw:addParam("dmgCalc","Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.R:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.R:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.R:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.R:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
         OM:LoadKeys(self.Menu.Keys)
@@ -242,10 +1080,67 @@ function _Xerath:LoadMenu()
         PrintMessage(self.ScriptName, "Hi! This script for free users doesn't start the Q correctly, but you can charge the Q by yourself and the script will shoot the Q.")
     end
 
-    self.MenuLoaded = true
-    AddDrawCallback(function() self:OnDraw() end)
-    AddTickCallback(function() self:OnTick() end)
-    AddProcessSpellCallback(function(unit, spell) self:OnProcessSpell(unit, spell) end)
+    AddTickCallback(
+        function() 
+            if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
+            self:UpdateValues()
+        
+            if self.R.IsCasting then self:CheckCastingR() return end
+            if not self.R.IsCasting and self.Menu.Ultimate.TapKey then self:CastR() end
+            self:KillSteal()
+        
+            if OM.Mode == ORBWALKER_MODE.Combo then 
+                if OM.KeysMenu.UseE then
+                    local target = nil
+                    for idx, enemy in ipairs(GetEnemyHeroes()) do
+                        if ValidTarget(enemy, self.E.Range) then
+                            if target == nil then target = enemy
+                            elseif GetDistanceSqr(myHero, target) > GetDistanceSqr(myHero, enemy) then target = enemy
+                            end
+                        end
+                    end
+                    if ValidTarget(target, self.E.Range) then
+                        self:CastE(target)
+                    end
+                else
+                    self:Combo()
+                end
+            elseif OM.Mode == ORBWALKER_MODE.Harass then self:Harass()
+            elseif OM.Mode == ORBWALKER_MODE.Clear then self:Clear() 
+            elseif OM.Mode == ORBWALKER_MODE.LastHit then
+            end
+        end
+    )
+    AddProcessSpellCallback(
+        function(unit, spell)
+            if myHero.dead or self.Menu == nil or not self.MenuLoaded or unit == nil or not unit.isMe then return end
+            if spell.name:lower():find("xeratharcanopulsechargeup") then 
+                self.Q.LastCastTime = os.clock()
+                self.Q.IsCharging = true
+                OM:DisableAttacks()
+            elseif spell.name:lower():find("xeratharcanopulse2") then 
+                self.Q.LastCastTime2 = os.clock()
+                self.Q.IsCharging = false
+                OM:EnableAttacks()
+            elseif spell.name:lower():find("xeratharcanebarrage2") then 
+                self.W.LastCastTime = os.clock()
+            elseif spell.name:lower():find("xerathmagespear") then 
+                self.E.LastCastTime = os.clock()
+            elseif spell.name:lower():find("xerathlocusofpower2") then 
+                self.R.LastCastTime = os.clock()
+                self.R.IsCasting = true
+                self.R.LastCastTime2 = os.clock()
+                OM:DisableMovement()
+                OM:DisableAttacks()
+                DelayAction(function() self.R.Stacks = self.R.MaxStacks self.R.Target = nil self.R.IsCasting = false end, self.R.ResetTime)
+            elseif spell.name:lower():find("xerathrmissilewrapper") then 
+            elseif spell.name:lower():find("xerathlocuspulse") then
+                self.R.LastCastTime2 = os.clock()
+                self.R.Stacks = self.R.Stacks - 1
+                OM:DisableAttacks()
+            end
+        end
+    )
     AddMsgCallback( 
         function(msg, key)
             if self.Menu == nil or not self.MenuLoaded then return end
@@ -317,13 +1212,81 @@ function _Xerath:LoadMenu()
     if VIP_USER then 
         AddCastSpellCallback(
             function(iSpell, startPos, endPos, targetUnit) 
-                if iSpell == _R then
+                if iSpell == self.R.Sent then
                     self.R.Sent = true
                     DelayAction(function() self.R.Sent = false end, self.TimeLimit)
                 end 
             end
-        ) 
+        )
     end
+
+    AddDrawCallback(
+        function() 
+            if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
+            if self.Menu.Draw.dmgCalc then DrawPredictedDamage() end
+            if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
+                local source = self.TS.target
+                DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
+            end
+        
+            if self.Menu.TS.Range then
+                DrawCircle3D(myHero.x, myHero.y, myHero.z, self:GetRange(), 1, Colors.Red, 40)
+            end
+        
+            if self.Menu.Draw.Q.Enable and self.Q.IsReady() then
+                local source    = myHero
+                local color     = self.Menu.Draw.Q.Color
+                local width     = self.Menu.Draw.Q.Width
+                local range     =           self.Q.Range
+                local quality   = self.Menu.Draw.Q.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        
+            if self.Menu.Draw.W.Enable and self.W.IsReady() then
+                local source    = myHero
+                local color     = self.Menu.Draw.W.Color
+                local width     = self.Menu.Draw.W.Width
+                local range     =           self.W.Range
+                local quality   = self.Menu.Draw.W.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        
+            if self.Menu.Draw.E.Enable and self.E.IsReady() then
+                local source    = myHero
+                local color     = self.Menu.Draw.E.Color
+                local width     = self.Menu.Draw.E.Width
+                local range     =           self.E.Range
+                local quality   = self.Menu.Draw.E.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        
+            if self.Menu.Draw.R.Enable and self.R.IsReady() then
+                local source    = myHero
+                local color     = self.Menu.Draw.R.Color
+                local width     = self.Menu.Draw.R.Width
+                local range     =           self.R.Range
+                local quality   = self.Menu.Draw.R.Quality
+                DrawCircleMinimap(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        
+            if self.Menu.Ultimate.KillableR and (self.R.IsReady() or self.R.IsCasting) then
+                for idx, enemy in ipairs(GetEnemyHeroes()) do
+                    local count = 0
+                    if ValidTarget(enemy, self.R.Range) then
+                        if self.R.Damage(enemy) * self.R.Stacks >= enemy.health then
+                            local p = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z))
+                            if OnScreen(p.x, p.y) then
+                                DrawText("R KILL", 25, p.x, p.y,  Colors.Red)
+                            end
+                            DrawText(enemy.charName:upper().." KILLABLE", 35, 100, 50 + 50 * count,  Colors.Red)
+                            count = count + 1
+                        end
+                    end
+                end
+            end
+        end
+    )
+    self.MenuLoaded = true
 end
 
 
@@ -335,7 +1298,7 @@ function _Xerath:UpdateValues()
     end
     self.R.Range = 2000 + 1200 * myHero:GetSpellData(self.R.Slot).level
     self.TS.range = self:GetRange()
-    self.TS.target = self:GetTarget()
+    self.TS.target = _GetTarget()
     if self.R.IsReady() or self.R.IsCasting then
         self.R.Target = self:FindBestKillableTarget()
     end
@@ -344,35 +1307,6 @@ function _Xerath:UpdateValues()
     if self:CanAttack() then OM:EnableAttacks() else OM:DisableAttacks() end
 end
 
-function _Xerath:OnTick()
-    if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
-    self:UpdateValues()
-
-    if self.R.IsCasting then self:CheckCastingR() return end
-    if not self.R.IsCasting and self.Menu.Ultimate.TapKey then self:CastR() end
-    self:KillSteal()
-
-    if OM.Mode == ORBWALKER_MODE.Combo then 
-        if OM.KeysMenu.UseE then
-            local target = nil
-            for idx, enemy in ipairs(GetEnemyHeroes()) do
-                if ValidTarget(enemy, self.E.Range) then
-                    if target == nil then target = enemy
-                    elseif GetDistanceSqr(myHero, target) > GetDistanceSqr(myHero, enemy) then target = enemy
-                    end
-                end
-            end
-            if ValidTarget(target, self.E.Range) then
-                self:CastE(target)
-            end
-        else
-            self:Combo()
-        end
-    elseif OM.Mode == ORBWALKER_MODE.Harass then self:Harass()
-    elseif OM.Mode == ORBWALKER_MODE.Clear then self:Clear() 
-    elseif OM.Mode == ORBWALKER_MODE.LastHit then
-    end
-end
 
 function _Xerath:KillSteal()
     for idx, enemy in ipairs(GetEnemyHeroes()) do
@@ -597,33 +1531,6 @@ function _Xerath:GetRange()
     return range
 end
 
-function _Xerath:GetTarget()
-    local bestTarget = nil
-    local range = self.TS.range
-    if ValidTarget(GetTarget(), range) then
-        if GetTarget().type:lower():find("hero") or GetTarget().type:lower():find("minion") then
-            return GetTarget() 
-        end
-    end
-    for i, enemy in ipairs(GetEnemyHeroes()) do
-        if ValidTarget(enemy, range) then
-            if bestTarget == nil then 
-                bestTarget = enemy
-            else
-                local q, w, e, r, dmgEnemy = GetBestCombo(enemy)
-                local q, w, e, r, dmgBest = GetBestCombo(bestTarget)
-                local percentageEnemy = (enemy.health - dmgEnemy) / enemy.maxHealth
-                local percentageBest = (bestTarget.health - dmgBest) / bestTarget.maxHealth
-
-                if percentageEnemy * GetPriority(enemy) < percentageBest * GetPriority(bestTarget) then
-                    bestTarget = enemy
-                end
-            end
-        end
-    end
-    return bestTarget
-end
-
 function _Xerath:FindBestKillableTarget()
     local bestTarget = nil
     for i, enemy in ipairs(GetEnemyHeroes()) do
@@ -650,100 +1557,6 @@ function _Xerath:FindBestTarget(from, range)
         end
     end
     return bestTarget
-end
-
-function _Xerath:OnDraw()
-    if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
-    if self.Menu.Draw.dmgCalc then DrawPredictedDamage() end
-    if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
-        local source = self.TS.target
-        DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
-    end
-
-    if self.Menu.TS.Range then
-        DrawCircle3D(myHero.x, myHero.y, myHero.z, self:GetRange(), 1, Colors.Red, 40)
-    end
-
-    if self.Menu.Draw.Q.Enable and self.Q.IsReady() then
-        local source    = Vector(myHero)
-        local color     = self.Menu.Draw.Q.Color
-        local width     = self.Menu.Draw.Q.Width
-        local range     =           self.Q.Range
-        local quality   = self.Menu.Draw.Q.Quality
-        DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
-
-    if self.Menu.Draw.W.Enable and self.W.IsReady() then
-        local source    = Vector(myHero)
-        local color     = self.Menu.Draw.W.Color
-        local width     = self.Menu.Draw.W.Width
-        local range     =           self.W.Range
-        local quality   = self.Menu.Draw.W.Quality
-        DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
-
-    if self.Menu.Draw.E.Enable and self.E.IsReady() then
-        local source    = Vector(myHero)
-        local color     = self.Menu.Draw.E.Color
-        local width     = self.Menu.Draw.E.Width
-        local range     =           self.E.Range
-        local quality   = self.Menu.Draw.E.Quality
-        DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
-
-    if self.Menu.Draw.R.Enable and self.R.IsReady() then
-        local source    = Vector(myHero)
-        local color     = self.Menu.Draw.R.Color
-        local width     = self.Menu.Draw.R.Width
-        local range     =           self.R.Range
-        local quality   = self.Menu.Draw.R.Quality
-        DrawCircleMinimap(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
-
-    if self.Menu.Ultimate.KillableR and (self.R.IsReady() or self.R.IsCasting) then
-        for idx, enemy in ipairs(GetEnemyHeroes()) do
-            local count = 0
-            if ValidTarget(enemy, self.R.Range) then
-                if self.R.Damage(enemy) * self.R.Stacks >= enemy.health then
-                    local p = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z))
-                    if OnScreen(p.x, p.y) then
-                        DrawText("R KILL", 25, p.x, p.y,  Colors.Red)
-                    end
-                    DrawText(enemy.charName:upper().." KILLABLE", 35, 100, 50 + 50 * count,  Colors.Red)
-                    count = count + 1
-                end
-            end
-        end
-    end
-end
-
-function _Xerath:OnProcessSpell(unit, spell)
-    if myHero.dead or self.Menu == nil or not self.MenuLoaded or unit == nil or not unit.isMe then return end
-    if spell.name:lower():find("xeratharcanopulsechargeup") then 
-        self.Q.LastCastTime = os.clock()
-        self.Q.IsCharging = true
-        OM:DisableAttacks()
-    elseif spell.name:lower():find("xeratharcanopulse2") then 
-        self.Q.LastCastTime2 = os.clock()
-        self.Q.IsCharging = false
-        OM:EnableAttacks()
-    elseif spell.name:lower():find("xeratharcanebarrage2") then 
-        self.W.LastCastTime = os.clock()
-    elseif spell.name:lower():find("xerathmagespear") then 
-        self.E.LastCastTime = os.clock()
-    elseif spell.name:lower():find("xerathlocusofpower2") then 
-        self.R.LastCastTime = os.clock()
-        self.R.IsCasting = true
-        self.R.LastCastTime2 = os.clock()
-        OM:DisableMovement()
-        OM:DisableAttacks()
-        DelayAction(function() self.R.Stacks = self.R.MaxStacks self.R.Target = nil self.R.IsCasting = false end, self.R.ResetTime)
-    elseif spell.name:lower():find("xerathrmissilewrapper") then 
-    elseif spell.name:lower():find("xerathlocuspulse") then
-        self.R.LastCastTime2 = os.clock()
-        self.R.Stacks = self.R.Stacks - 1
-        OM:DisableAttacks()
-    end
 end
 
 function _Xerath:CanMove()
@@ -926,8 +1739,6 @@ function _Riven:LoadMenu()
         self.Menu.Keys.Run     = false
         self.Menu.Keys.WallJump     = false
 
-    self.MenuLoaded = true
-
     PrintMessage(self.ScriptName, "If the Orbwalker cancel your AA, go to Orbwalk Manager and modify the value of Extra WindUpTime, between 80 - 180 should be OK.")
     AddDrawCallback(function() self:OnDraw() end)
     AddTickCallback(function() self:OnTick() end)
@@ -978,6 +1789,7 @@ function _Riven:LoadMenu()
             end
         end
     )
+    self.MenuLoaded = true
 end
 
 function _Riven:UpdateValues()
@@ -1378,7 +2190,7 @@ end
 
 function _Riven:OnProcessSpell(unit, spell)
     if unit and spell and unit.isMe and spell.name then
-        if spell.name:lower():find("basicattack") then
+        if spell.name:lower():find("attack") then
             self.AA.LastCastTime = os.clock()
         elseif spell.name:lower():find("riventricleave") then
             self:AddStack()
@@ -1625,7 +2437,7 @@ function _Riven:OnDraw()
     end
 
     if self.Menu.Draw.Q.Enable and self.Q.IsReady() then
-        local source    = Vector(myHero)
+        local source    = myHero
         local color     = self.Menu.Draw.Q.Color
         local width     = self.Menu.Draw.Q.Width
         local range     =           self.Q.Range
@@ -1634,7 +2446,7 @@ function _Riven:OnDraw()
     end
 
     if self.Menu.Draw.W.Enable and self.W.IsReady() then
-        local source    = Vector(myHero)
+        local source    = myHero
         local color     = self.Menu.Draw.W.Color
         local width     = self.Menu.Draw.W.Width
         local range     =           self.W.Range
@@ -1643,7 +2455,7 @@ function _Riven:OnDraw()
     end
 
     if self.Menu.Draw.E.Enable and self.E.IsReady() then
-        local source    = Vector(myHero)
+        local source    = myHero
         local color     = self.Menu.Draw.E.Color
         local width     = self.Menu.Draw.E.Width
         local range     =           self.E.Range
@@ -1652,56 +2464,12 @@ function _Riven:OnDraw()
     end
 
     if self.Menu.Draw.R.Enable and self.R.IsReady() then
-        local source    = Vector(myHero)
+        local source    = myHero
         local color     = self.Menu.Draw.R.Color
         local width     = self.Menu.Draw.R.Width
         local range     =           self.R.Range
         local quality   = self.Menu.Draw.R.Quality
         DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
-end
-
-
-function _Riven:OnCreateObj(obj)
-    --if obj and GetDistance(obj, myHero) < 1000 then print("Created: "..obj.name) end
-    if obj and obj.name and obj.name:lower():find("_q") and obj.name:lower():find("_trail") then
-        if obj.name:lower():find("01") then
-            self.Q.State = 1
-        elseif obj.name:lower():find("02") then
-            self.Q.State = 2
-        elseif obj.name:lower():find("03") then
-            self.Q.State = 3
-        end
-    elseif obj and obj.name and obj.name:lower():find("riven") and obj.name:lower():find("_r") and obj.name:lower():find("_buff.troy") then
-        self.R.State = true
-        DelayAction(function() self.R.State = false end, 15)
-    end
-end
-
-function _Riven:OnDeleteObj(obj)
-    --if obj and GetDistance(obj, myHero) < 1000 then print("Deleted: "..obj.name) end
-    if obj and obj.name and obj.name:lower():find("_p") and obj.name:lower():find("_buff") then
-        self.P.Stacks = 0
-    elseif obj and obj.name and obj.name:lower():find("_q") and obj.name:lower():find("_detonate") and obj.name:lower():find("03") then
-        self.Q.State = 0
-    elseif obj and obj.name and obj.name:lower():find("riven") and obj.name:lower():find("_r") and obj.name:lower():find("_buff.troy") then
-        self.R.State = false
-    end
-end
-
-function _Riven:OnAnimation(unit, animationName)
-    if unit.isMe then
-        if animationName:lower():find("idle") then
-        elseif animationName:lower():find("attack") then
-        elseif animationName:lower():find("idle1") then
-        elseif animationName:lower():find("spell1a") then
-            self.Q.State = 1
-        elseif animationName:lower():find("spell1b") then
-            self.Q.State = 2
-        elseif animationName:lower():find("spell1c") then
-            self.Q.State = 3
-            DelayAction(function() self.Q.State = 0 end, 1)
-        end
     end
 end
 
@@ -1848,6 +2616,71 @@ local GAPCLOSER_SPELLS = {
     ["Ziggs"]           = "W",
 }
 
+
+class "_Initiator"
+function _Initiator:__init(menu, range)
+    self.Callbacks = {}
+    self.Menu = menu
+    self.Range = range
+    if #GetAllyHeroes() > 0 and self.Menu~=nil then
+        for idx, ally in ipairs(GetAllyHeroes()) do
+            self.Menu:addParam(ally.charName.."Q", ally.charName.." (Q)", SCRIPT_PARAM_ONOFF, false)
+            self.Menu:addParam(ally.charName.."W", ally.charName.." (W)", SCRIPT_PARAM_ONOFF, false)
+            self.Menu:addParam(ally.charName.."E", ally.charName.." (E)", SCRIPT_PARAM_ONOFF, false)
+            self.Menu:addParam(ally.charName.."R", ally.charName.." (R)", SCRIPT_PARAM_ONOFF, false)
+        end
+        self.Menu:addParam("Time",  "Time Limit to Initiate", SCRIPT_PARAM_SLICE, 3, 0, 8, 0)
+        AddProcessSpellCallback(function(unit, spell) self:OnProcessSpell(unit, spell) end)
+    end
+end
+
+function _Initiator:CheckChannelingSpells()
+    if #GetAllyHeroes() > 0 then
+        for idx, ally in ipairs(GetAllyHeroes()) do
+            for champ, spell in pairs(CHANELLING_SPELLS) do
+                if ally.charName == champ then
+                    self.Menu[ally.charName..spell] = true
+                end
+            end
+        end
+    end
+end
+
+function _Initiator:CheckGapcloserSpells()
+    if #GetAllyHeroes() > 0 then
+        for idx, ally in ipairs(GetAllyHeroes()) do
+            for champ, spell in pairs(GAPCLOSER_SPELLS) do
+                if enemy.charName == champ then
+                    self.Menu[ally.charName..spell] = true
+                end
+            end
+        end
+    end
+end
+
+function _Initiator:RegisterCallback(cb)
+    table.insert(self.Callbacks, cb)
+end
+
+function _Initiator:OnProcessSpell(unit, spell)
+    if not myHero.dead and unit and spell and spell.name and not unit.isMe and unit.type and unit.team and GetDistanceSqr(myHero, unit) < self.Range * self.Range then
+        if unit.type == myHero.type and unit.team == myHero.team then
+            local spelltype, casttype = getSpellType(unit, spell.name)
+            if spelltype == "Q" or spelltype == "W" or spelltype == "E" or spelltype == "R" then
+                if self.Menu[unit.charName..spelltype] then 
+                    self:TriggerCallbacks(unit, os.clock())
+                end
+            end
+        end
+    end
+end
+
+function _Initiator:TriggerCallbacks(unit, time)
+    for i, callback in ipairs(self.Callbacks) do
+        callback(unit, time, self.Menu.Time)
+    end
+end
+
 class "_Interrupter"
 function _Interrupter:__init(menu, range)
     self.Callbacks = {}
@@ -1929,7 +2762,11 @@ function _OrbwalkManager:__init()
     self.AA = {LastTime = 0, LastTarget = nil, isAttacking = false}
     DelayAction(function() self:OrbLoad() end, 5)
     AddProcessSpellCallback(function(unit, spell) self:OnProcessSpell(unit, spell) end)
-    AddTickCallback(function() self:OnTick() end)
+    AddTickCallback(
+        function()
+            self.Mode = self.KeyMan:ModePressed()
+        end
+    )
     self.EnemyMinions = minionManager(MINION_ENEMY, 1000, myHero, MINION_SORT_HEALTH_ASC)
     self.JungleMinions = minionManager(MINION_JUNGLE, 1000, myHero, MINION_SORT_MAXHEALTH_DEC)
 end
@@ -1947,12 +2784,13 @@ end
 
 function _OrbwalkManager:OnProcessSpell(unit, spell)
     if unit and unit.isMe and spell and spell.name then
-        if spell.name:lower():find("basicattack") then
+        if spell.name:lower():find("attack") then
             if not self.DataUpdated then
                 self.BaseAnimationTime = 1 / (spell.animationTime * myHero.attackSpeed)
                 self.BaseWindUpTime = 1 / (spell.windUpTime * myHero.attackSpeed)
                 self.DataUpdated = true
             end
+            self.AA.LastTarget = spell.target
             self.AA.isAttacking = true
             self.AA.LastTime = self:GetTime() - self:Latency()
             DelayAction(
@@ -1961,7 +2799,7 @@ function _OrbwalkManager:OnProcessSpell(unit, spell)
                     self.AA.isAttacking = false
                     if self.GotReset then self.GotReset = false end
                 end
-            ,spell.windUpTime - self:Latency() * 2)
+            ,spell.windUpTime - self:Latency())
         elseif spell.name:lower():find("riventricleave") or spell.name:lower():find("tiamat") or spell.name:lower():find("hydra") then
             self.GotReset = true
             DelayAction(
@@ -1973,9 +2811,6 @@ function _OrbwalkManager:OnProcessSpell(unit, spell)
     end
 end
 
-function _OrbwalkManager:OnTick()
-    self.Mode = self.KeyMan:ModePressed()
-end
 --TODO
 function _OrbwalkManager:ObjectInRange(off)
     local offset = off~=nil and off or 0
@@ -2105,15 +2940,17 @@ function _OrbwalkManager:TakeControl()
         if self:CanAttack() then self:EnableAttacks() else self:DisableAttacks() end
     end)
     if VIP_USER then HookPackets() end
-    if VIP_USER then AddSendPacketCallback(function(p) self:OnSendPacket(p) end) end
-end
-
-function _OrbwalkManager:OnSendPacket(p)
-    p.pos = 2
-    if myHero.networkID == p:DecodeF() then
-        if not self:CanAttack() and not self:CanMove() and not self:Evade() then
-            Packet(p):block()
-        end
+    if VIP_USER then 
+        AddSendPacketCallback(
+            function(p)
+                p.pos = 2
+                if myHero.networkID == p:DecodeF() then
+                    if not self:CanAttack() and not self:CanMove() and not self:Evade() then
+                        Packet(p):block()
+                    end
+                end
+            end
+        ) 
     end
 end
 
@@ -2493,7 +3330,7 @@ end
 function _Queue:OnProcessSpell(unit, spell)
     if unit and spell and spell.name and unit.isMe then
         local range = 600
-        if spell.name:lower():find("basicattack") then
+        if spell.name:lower():find("attack") then
             DelayAction(
                 function()
                     local target = OM:ObjectInRange(champ.AA.OffsetRange)
@@ -2808,6 +3645,38 @@ function WallJump:GetWallNearWithoutChecks()
         end
     end
     return output
+end
+
+
+function GetAARange(unit)
+    return ValidTarget(unit) and unit.range + unit.boundingRadius + myHero.boundingRadius / 2 or 0
+end
+
+function _GetTarget()
+    local bestTarget = nil
+    local range = champ.TS.range
+    if ValidTarget(GetTarget(), range) then
+        if GetTarget().type:lower():find("hero") or GetTarget().type:lower():find("minion") then
+            return GetTarget() 
+        end
+    end
+    for i, enemy in ipairs(GetEnemyHeroes()) do
+        if ValidTarget(enemy, range) then
+            if bestTarget == nil then 
+                bestTarget = enemy
+            else
+                local q, w, e, r, dmgEnemy = GetBestCombo(enemy)
+                local q, w, e, r, dmgBest = GetBestCombo(bestTarget)
+                local percentageEnemy = (enemy.health - dmgEnemy) / enemy.maxHealth
+                local percentageBest = (bestTarget.health - dmgBest) / bestTarget.maxHealth
+
+                if percentageEnemy * GetPriority(enemy) < percentageBest * GetPriority(bestTarget) then
+                    bestTarget = enemy
+                end
+            end
+        end
+    end
+    return bestTarget
 end
 
 function GetHPBarPos(enemy)
@@ -3704,5 +4573,7 @@ if SCRIPTSTATUS then
         assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("VILJKNJQNPI") 
     elseif myHero.charName == "Xerath" then
         assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("OBECIDHCEEA") 
+    elseif myHero.charName == "Orianna" then
+        assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("XKNLQOKQQLP") 
     end
 end
