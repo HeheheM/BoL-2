@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.008
+local version = 1.009
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true}
 if not champions[myHero.charName] then return end
 
@@ -346,7 +346,7 @@ function _Orianna:LoadMenu()
         self.Menu.Misc:addParam("predictionType",  "Type of prediction", SCRIPT_PARAM_LIST, 1, PredictionTable)
         if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then self.Menu.Misc:addParam("ExtraTime","DPred Extra Time", SCRIPT_PARAM_SLICE, 0.13, 0, 1, 1) end
         self.Menu.Misc:addParam("overkill", "Overkill % for Dmg Predict..", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
-        if VIP_USER then self.Menu.Misc:addParam("BlockR", "Block R If Will Not Hit", SCRIPT_PARAM_ONOFF, true) end
+        if VIP_USER then self.Menu.Misc:addParam("BlockR", "Block R If Will Not Hit", SCRIPT_PARAM_ONOFF, false) end
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
@@ -538,7 +538,7 @@ function _Orianna:LoadMenu()
         AddCastSpellCallback(
             function(iSpell, startPos, endPos, targetUnit) 
                 if iSpell == self.R.Slot and #self:ObjectsInArea(self.R.Range, self.R.Delay, GetEnemyHeroes()) == 0  then
-                    self.R.Sent = os.clock()
+                    self.R.Sent = os.clock() - OM:Latency()
                 end
             end
         )
@@ -977,7 +977,7 @@ function _Xerath:__init()
 end
 
 function _Xerath:LoadVariables()
-    self.TimeLimit = 0.02
+    self.TimeLimit = 0.1
     self.QPacket = 49
     self.DataUpdated = false
     self.TS = TargetSelector(TARGET_LESS_CAST_PRIORITY, self.Q.MaxRange + self.Q.Offset, DAMAGE_MAGIC)
@@ -1214,9 +1214,9 @@ function _Xerath:LoadMenu()
     if VIP_USER then 
         AddCastSpellCallback(
             function(iSpell, startPos, endPos, targetUnit) 
-                if iSpell == self.R.Sent then
+                if iSpell == self.R.Slot then
                     self.R.Sent = true
-                    DelayAction(function() self.R.Sent = false end, self.TimeLimit)
+                    DelayAction(function() self.R.Sent = false end, self.TimeLimit + OM:Latency())
                 end 
             end
         )
@@ -1727,8 +1727,8 @@ function _Riven:LoadMenu()
         self.Menu.Draw.R:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
         self.Menu.Draw.R:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
         self.Menu.Draw.R:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
-        self.Menu.Draw:addParam("TimeQ","Show Time Left for Q", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.Draw:addParam("dmgCalc","Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Draw:addParam("TimeQ", "Show Time Left for Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
         self.Menu.Draw:addParam("dmgCalc","Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
