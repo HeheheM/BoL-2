@@ -1,8 +1,8 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.009
-local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true}
+local version = 1.010
+local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true}
 if not champions[myHero.charName] then return end
 
 function Immune(target)
@@ -119,10 +119,716 @@ function OnLoad()
 
     elseif myHero.charName == "Orianna" then
         champ = _Orianna()
+    elseif myHero.charName == "Draven" then
+        champ = _Draven()
     end
 
     if champ~=nil then
-        PrintMessage(champ.ScriptName.." by "..champ.Author.." Loaded, Have Fun!.")
+        PrintMessage(champ.ScriptName.." by "..champ.Author.." loaded, Have Fun!.")
+    end
+end
+
+
+
+
+class "_Draven"
+function _Draven:__init()
+    self.ScriptName = "Draven Me Crazy"
+    self.Author = "iCreative"
+    self.MenuLoaded = false
+    self.Menu = nil
+    self.P = { Damage = function(target) return getDmg("P", target, myHero) end, IsReady = false}
+    self.AA      = {            Range = function(target) local int1 = 0 if ValidTarget(target) then int1 = GetDistance(target.minBBox, target)/2 end return myHero.range + GetDistance(myHero, myHero.minBBox) + int1 + 50 end, Damage = function(target) return getDmg("AD", target, myHero) end }
+    self.Q       = { Slot = _Q, Range = 1075, Width = 60, Delay = 0.5, Speed = 1200, LastCastTime = 0, Collision = true, Aoe = false, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("P", target, myHero) end, IsCatching = false, Stacks  = 0}
+    self.W       = { Slot = _W, Range = 950, Width = 315, Delay = 0.5, Speed = math.huge, LastCastTime = 0, Collision = false, Aoe = false, IsReady = function() return myHero:CanUseSpell(_W) == READY end, Mana = function() return myHero:GetSpellData(_W).mana end, Damage = function(target) return 0 end, HaveMoveSpeed = false, HaveAttackSpeed = false}
+    self.E       = { Slot = _E, Range = 1050, Width = 130, Delay = 0.25, Speed = 1400, LastCastTime = 0, Collision = false, Aoe = true, Type = "linear", IsReady = function() return myHero:CanUseSpell(_E) == READY end, Mana = function() return myHero:GetSpellData(_E).mana end, Damage = function(target) return getDmg("E", target, myHero) end}
+    self.R       = { Slot = _R, Range = 20000, Width = 150, Delay = 0.4, Speed = 2000, LastCastTime = 0, Collision = false, Aoe = true, Type = "linear", IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end, Obj = nil}
+    self:LoadVariables()
+    self:LoadMenu()
+end
+
+function _Draven:LoadVariables()
+    self.ProjectileSpeed = myHero.range > 300 and VP:GetProjectileSpeed(myHero) or math.huge
+    self.TS = TargetSelector(TARGET_LESS_CAST_PRIORITY, 900, DAMAGE_PHYSICAL)
+    self.EnemyMinions = minionManager(MINION_ENEMY, 900, myHero, MINION_SORT_MAXHEALTH_DEC)
+    self.JungleMinions = minionManager(MINION_JUNGLE, 900, myHero, MINION_SORT_MAXHEALTH_DEC)
+    self.Menu = scriptConfig(self.ScriptName.." by "..self.Author, self.ScriptName.."1.000")
+    self.AxesCatcher = _AxesCatcher()
+end
+
+function _Draven:LoadMenu()
+    self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
+        self.Menu.TS:addTS(self.TS)
+        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
+        self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_LIST, 3, { "Zero Spins", "One Spin", "Two Spins"})
+        self.Menu.Combo:addParam("useW","Use W", SCRIPT_PARAM_LIST, 2, { "Never", "If is not in range", "Always"})
+        self.Menu.Combo:addParam("useE","Use E", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useR1","Use R if Killable", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useR2","Use R If Enemies >=", SCRIPT_PARAM_SLICE, 3, 0, 5, 0)
+        self.Menu.Combo:addParam("useItems","Use Items", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Harass Settings", "Harass")
+        self.Menu.Harass:addParam("useQ","Use Q", SCRIPT_PARAM_LIST, 2, { "Zero Spins", "One Spin", "Two Spins"})
+        self.Menu.Harass:addParam("useW","Use W", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("useE","Use E", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+        
+    self.Menu:addSubMenu(myHero.charName.." - LaneClear Settings", "LaneClear")
+        self.Menu.LaneClear:addParam("useQ", "Use Q", SCRIPT_PARAM_LIST, 2, { "Zero Spins", "One Spin", "Two Spins"})
+        self.Menu.LaneClear:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.LaneClear:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.LaneClear:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+
+    self.Menu:addSubMenu(myHero.charName.." - JungleClear Settings", "JungleClear")
+        self.Menu.JungleClear:addParam("useQ", "Use Q", SCRIPT_PARAM_LIST, 2, { "Zero Spins", "One Spin", "Two Spins"})
+        self.Menu.JungleClear:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.JungleClear:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.JungleClear:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+
+    self.Menu:addSubMenu(myHero.charName.." - LastHit Settings", "LastHit")
+        self.Menu.LastHit:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.LastHit:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.LastHit:addParam("Mana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+
+    self.Menu:addSubMenu(myHero.charName.." - KillSteal Settings", "KillSteal")
+        self.Menu.KillSteal:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useIgnite", "Use Ignite", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Auto Settings", "Auto")
+        self.Menu.Auto:addSubMenu("Use E To Interrupt", "useE")
+            self.Int = _Interrupter(self.Menu.Auto.useE, self.E.Range + 500)
+            self.Int:CheckGapcloserSpells()
+            self.Int:CheckChannelingSpells()
+            self.Int:RegisterCallback(function(target, time, timeLimit) self:ForceE(target, time, timeLimit) end)
+
+    self.Menu:addSubMenu(myHero.charName.." - Axe Settings", "Axe")
+        self.AxesCatcher:LoadMenu(self.Menu.Axe)
+
+    self.Menu:addSubMenu(myHero.charName.." - Misc Settings", "Misc")
+        self.Menu.Misc:addParam("predictionType",  "Type of prediction", SCRIPT_PARAM_LIST, 1, PredictionTable)
+        if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then self.Menu.Misc:addParam("ExtraTime","DPred Extra Time", SCRIPT_PARAM_SLICE, 0.2, 0, 1, 1) end
+        self.Menu.Misc:addParam("overkill","Overkill % for Dmg Predict..", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+        self.Menu.Misc:addParam("rRange","R Range", SCRIPT_PARAM_SLICE, 1800, 300, 6000, 0)
+        self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
+
+    self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
+        self.Menu.Draw:addSubMenu("E", "E")
+            self.Menu.Draw.E:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.E:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.E:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.E:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
+        self.Menu.Draw:addSubMenu("R", "R")
+            self.Menu.Draw.R:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.R:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.R:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.R:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        self.Menu.Draw:addParam("dmgCalc","Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
+        OM:LoadKeys(self.Menu.Keys)
+        self.Menu.Keys:addParam("Flee", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
+
+    AddTickCallback(
+        function()
+            self.R.Range = self.Menu.Misc.rRange
+            self.TS:update()
+        
+            self.AxesCatcher:CheckCatch()
+        
+            self:KillSteal()
+        
+            if OM.Mode == ORBWALKER_MODE.Combo then self:Combo()
+            elseif OM.Mode == ORBWALKER_MODE.Harass then self:Harass()
+            elseif OM.Mode == ORBWALKER_MODE.Clear then self:Clear() 
+            elseif OM.Mode == ORBWALKER_MODE.LastHit then self:LastHit()
+            end
+        
+            if self.Menu.Keys.Flee then self:Flee() end
+        end
+    )
+    AddProcessSpellCallback(
+        function(unit, spell) 
+            if myHero.dead or not self.MenuLoaded then return end
+            if unit and spell and spell.name and unit.isMe then
+                if spell.name:lower() == "dravenspinning" then self.Q.LastCastTime = os.clock()
+                elseif spell.name:lower() == "dravendoubleshot" then self.E.LastCastTime = os.clock()
+                elseif spell.name:lower():find("fury") then 
+                    self.W.LastCastTime = os.clock()
+                    self.W.HaveMoveSpeed = true
+                    self.W.HaveAttackSpeed = true
+                elseif spell.name:lower() == "dravenrcast" then self.R.LastCastTime = os.clock()
+                end
+            end
+        end
+    )
+    AddDrawCallback(
+        function()
+            if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
+            if self.Menu.Draw.dmgCalc then DrawPredictedDamage() end
+            if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
+                local source = self.TS.target
+                DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
+            end
+        
+            if self.Menu.TS.Range then
+                DrawCircle3D(myHero.x, myHero.y, myHero.z, self.TS.range, 1, Colors.Red, 40)
+            end
+        
+            if self.Menu.Draw.E.Enable and self.E.IsReady() then
+                local source    = Vector(myHero)
+                local color     = self.Menu.Draw.E.Color
+                local width     = self.Menu.Draw.E.Radius
+                local range     =           self.E.Range
+                local quality   = self.Menu.Draw.E.Quality
+                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        
+            if self.Menu.Draw.R.Enable and self.R.IsReady() then
+                local source    = Vector(myHero)
+                local color     = self.Menu.Draw.R.Color
+                local width     = self.Menu.Draw.R.Radius
+                local range     =           self.R.Range
+                local quality   = self.Menu.Draw.R.Quality
+                DrawCircleMinimap(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+            end
+        end
+    )
+    AddCreateObjCallback(
+        function(obj)
+            if obj and os.clock() - self.R.LastCastTime < 0.5 and obj.name:lower():find("linemissile") and obj.spellOwner.isMe then
+                self.R.Obj = obj
+            end
+        end
+    )
+    AddDeleteObjCallback(
+        function(obj)
+            if obj and obj.valid and obj.name and self.R.Obj ~= nil and GetDistanceSqr(self.R.Obj, obj) < 100 * 100 and obj.name == self.R.Obj.name then
+                self.R.Obj = nil
+            elseif obj and obj.valid and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("_w")and obj.name:lower():find("_buf") then
+                if obj.name:lower():find("move") then
+                    self.W.HaveMoveSpeed = false
+                elseif obj.name:lower():find("attack") then
+                    self.W.HaveAttackSpeed = false
+                end
+            end
+        end
+    )
+    self.MenuLoaded = true
+end
+
+function _Draven:KillSteal()
+    for idx, enemy in ipairs(GetEnemyHeroes()) do
+        if enemy.health/enemy.maxHealth < 0.4 and ValidTarget(enemy, self.R.Range) and enemy.visible then
+            local q, w, e, r, dmg = GetBestCombo(enemy)
+            if dmg >= enemy.health then
+                if self.Menu.KillSteal.useQ and ( q or self.Q.Damage(enemy) > enemy.health) and not enemy.dead then self:CastQ(enemy) end
+                if self.Menu.KillSteal.useE and ( e or self.E.Damage(enemy) > enemy.health) and not enemy.dead then self:CastE(enemy) end
+                if self.Menu.KillSteal.useR and ( r or self.R.Damage(enemy) > enemy.health) and not enemy.dead then self:CastR(enemy) end
+            end
+            if self.Menu.KillSteal.useIgnite and Ignite.IsReady() and Ignite.Damage(enemy) > enemy.health and not enemy.dead then CastIgnite(enemy) end
+        end
+    end
+end
+
+function _Draven:Flee()
+    if OM:CanMove() then myHero:MoveTo(mousePos.x, mousePos.z) end
+    if self.W.IsReady() then CastSpell(self.W.Slot) end
+    if self.E.IsReady() then 
+        local target = nil
+        for idx, enemy in ipairs(GetEnemyHeroes()) do
+            if ValidTarget(enemy, self.E.Range) then
+                if target == nil then target = enemy
+                elseif GetDistanceSqr(myHero, target) > GetDistanceSqr(myHero, enemy) then target = enemy
+                end
+            end
+        end
+        if ValidTarget(target, self.E.Range) then
+            self:CastE(target)
+        end
+     end
+end
+
+
+function _Draven:GetLastRTarget()
+    local last = nil
+    for idx, enemy in ipairs(GetEnemyHeroes()) do
+        if ValidTarget(enemy, self.R.Range) and enemy.visible then
+            if last == nil then last = enemy
+            elseif GetDistanceSqr(myHero, last) < GetDistanceSqr(myHero, enemy) then last = enemy end
+        end
+    end
+    return last
+end
+
+function _Draven:Combo()
+    local target = self.TS.target
+    if ValidTarget(target, self.TS.range) then
+        if self.Menu.Combo.useItems then UseItems(target) end
+        if self.Menu.Combo.useE then self:CastE(target) end
+        if self.Menu.Combo.useQ then self:CastQ(target, self.Menu.Combo.useQ) end
+        if self.Menu.Combo.useW > 1 then self:CastW(target, self.Menu.Combo.useW) end
+        if self.Menu.Combo.useR1 then
+            local q, w, e, r, dmg = GetBestCombo(target)
+            if r and dmg >= target.health then self:CastR(target) end
+        end
+        if self.Menu.Combo.useR2 > 0 and self.R.IsReady() then
+            local BestCastPosition, BestHitChance, BestCount = nil, nil, 0
+            for idx, enemy in ipairs(GetEnemyHeroes()) do
+                if self.R.IsReady() and ValidTarget(enemy, self.R.Range) then
+                    local CastPosition,  HitChance,  Count = VP:GetLineAOECastPosition(enemy, self.R.Delay, self.R.Width, GetDistance(myHero, self:GetLastRTarget()) + 200, self.R.Speed, myHero)
+                    if BestCount == 0 then BestCastPosition = CastPosition BestHitChance = HitChance BestCount = Count
+                    elseif BestCount < Count then BestCastPosition = CastPosition BestHitChance = HitChance BestCount = Count end
+                end
+            end
+            if BestCount >= self.Menu.Combo.useR2 and BestCastPosition ~= nil and BestHitChance ~=nil and BestHitChance >= 2 then
+                CastSpell(self.R.Slot, BestCastPosition.x, BestCastPosition.z)
+            end
+        end
+    end
+end
+
+function _Draven:Harass()
+    if myHero.mana / myHero.maxMana * 100 >= self.Menu.Harass.Mana then
+        if self.Menu.Harass.useQ and self.Q.IsReady() then 
+            self.EnemyMinions:update() 
+            for i, minion in pairs(self.EnemyMinions.objects) do
+                if ValidTarget(minion, self.AA.Range(minion)) then
+                    self:CastQ(minion, self.Menu.Harass.useQ) 
+                end
+            end
+        end
+        local target = self.TS.target
+        if ValidTarget(target) then
+            if self.Menu.Harass.useE then self:CastE(target) end
+            if self.Menu.Harass.useQ and self.Q.IsReady() then self:CastQ(target, self.Menu.Harass.useQ) end
+            if self.Menu.Harass.useW then self:CastW(target) end
+        end
+    end
+end
+
+function _Draven:Clear()
+    if myHero.mana / myHero.maxMana * 100 >= self.Menu.LaneClear.Mana then
+        self.EnemyMinions:update() 
+        for i, minion in pairs(self.EnemyMinions.objects) do
+            if ValidTarget(minion) and myHero.mana / myHero.maxMana * 100 >= self.Menu.LaneClear.Mana then 
+                if self.Menu.LaneClear.useE and self.E.IsReady() then
+                    local BestPos = GetBestLineFarmPosition(self.E.Range, self.E.Width, self.EnemyMinions.objects)
+                    if BestPos ~= nil then CastSpell(self.E.Slot, BestPos.x, BestPos.z) end
+                end
+    
+                if self.Menu.LaneClear.useQ and self.Q.IsReady() then
+                    self:CastQ(minion, self.Menu.LaneClear.useQ)
+                end
+    
+                if self.Menu.LaneClear.useW and self.W.IsReady() then
+                    self:CastW(minion)
+                end
+            end
+        end
+    end
+
+
+    if myHero.mana / myHero.maxMana * 100 >= self.Menu.JungleClear.Mana then
+        self.JungleMinions:update()
+        for i, minion in pairs(self.JungleMinions.objects) do
+            if ValidTarget(minion)  and myHero.mana / myHero.maxMana * 100 >= self.Menu.JungleClear.Mana then 
+                if self.Menu.JungleClear.useE and self.E.IsReady() then
+                    CastSpell(self.E.Slot, minion.x, minion.z)
+                end
+                if self.Menu.JungleClear.useQ and self.Q.IsReady() then
+                    self:CastQ(minion, self.Menu.JungleClear.useQ)
+                end
+    
+                if self.Menu.JungleClear.useW and self.W.IsReady() then
+                    self:CastW(minion)
+                end
+            end
+        end
+    end
+end
+
+function _Draven:LastHit()
+    self.EnemyMinions:update() 
+    for i, minion in pairs(self.EnemyMinions.objects) do
+       if ValidTarget(minion, self.AA.Range(minion)) and self.Menu.LastHit.useQ and self.Q.IsReady() then
+            local time = OM:WindUpTime() - OM:ExtraWindUp() + OM:Latency() + GetDistance(myHero.pos, minion.pos) / self.ProjectileSpeed - 100/1000
+            local predHealth = VP:GetPredictedHealth(minion, time, 0)
+            local axedmg = self.AxesCatcher:GetCountAxes() > 0 and self.Q.Damage(minion) or 0
+            if VP:CalcDamageOfAttack(myHero, minion, {name = "Basic"}, 0) + axedmg > predHealth and predHealth > -40 then
+                if self.AxesCatcher:GetCountAxes() == 0 then
+                    self:CastQ(minion, 2)
+                end
+            end
+        end
+        if ValidTarget(minion, self.E.Range) and self.Menu.LastHit.useE and self.E.IsReady() then
+            local time = self.E.Delay + GetDistance(minion.pos, myHero.pos) / self.E.Speed - 0.07
+            local predHealth = VP:GetPredictedHealth(minion, time, 0)
+            if self.E.Damage(minion) > predHealth and predHealth > -40 then
+                CastSpell(self.E.Slot, minion.x, minion.z)
+            end
+        end
+    end
+end
+
+function _Draven:CastQ(target, m)
+    local mode = m ~= nil and m or 3
+    if self.Q.IsReady() and ValidTarget(target, self.TS.range) and self.AxesCatcher:GetCountAxes() < 2 and OM:CanAttack() then
+        -- 2 spins
+        if mode == 3 then
+            CastSpell(self.Q.Slot)
+        -- 1 spins
+        elseif mode == 2 then
+            if self.AxesCatcher:GetCountAxes() < 1 then CastSpell(self.Q.Slot) end
+        -- 0 spins
+        elseif mode == 1 then
+
+        end
+    end
+end
+
+function _Draven:CastW(target, m)
+    local mode = m ~= nil and m or 3
+    if self.W.IsReady() and ValidTarget(target, self.TS.range) and not self.W.HaveAttackSpeed then
+        if mode == 2 then
+            if not ValidTarget(target, self.AA.Range(target)) then
+                CastSpell(self.W.Slot)
+            end
+        elseif mode == 3 then
+            CastSpell(self.W.Slot)
+        end
+    end
+end
+
+
+function _Draven:CastE(target)
+    if self.E.IsReady() and ValidTarget(target, self.E.Range) then
+        local CastPosition,  HitChance,  Count = prediction:GetPrediction(target, self.E)
+        if CastPosition~=nil and HitChance >= 2 then
+            CastSpell(self.E.Slot, CastPosition.x, CastPosition.z)
+        end
+    end
+end
+
+function _Draven:CastR(target)
+    if self.R.IsReady() and ValidTarget(target, self.R.Range) then
+        local spell = { Delay = self.R.Delay, Width = self.R.Width, Range = GetDistance(myHero, target) + 200, Speed = self.R.Speed, Type = self.R.Type, Collision = self.R.Collision, Aoe = self.R.Aoe}
+        local CastPosition,  HitChance,  Count = prediction:GetPrediction(target, spell)
+        if HitChance >= 2 and self.R.Obj == nil then
+            CastSpell(self.R.Slot, CastPosition.x, CastPosition.z)
+        elseif self.R.Obj ~= nil then
+            if GetDistanceSqr(myHero, self.R.Obj) > GetDistanceSqr(myHero, self:GetLastRTarget()) then
+                CastSpell(self.R.Slot)
+            end
+        end
+    end
+end
+
+
+function _Draven:ForceE(target, time, timeLimit)
+    if not ValidTarget(target) or os.clock() - time > timeLimit then return end
+    if self.E.IsReady() and ValidTarget(target, self.E.Range + 500) then
+        self:CastE(target)
+    end
+    if ValidTarget(target, self.E.Range + 500) then
+        DelayAction(function(target, time, timeLimit) self:ForceE(target, time, timeLimit) end, 0.1, {target, time, timeLimit})
+    end
+end
+
+function _Draven:GetComboDamage(target, q, w, e, r)
+    local comboDamage = 0
+    local currentManaWasted = 0
+    if ValidTarget(target) then
+        if q then
+            comboDamage = comboDamage + self.Q.Damage(target)
+            currentManaWasted = currentManaWasted + self.Q.Mana()
+        end
+        if w then
+            currentManaWasted = currentManaWasted + self.W.Mana()
+            comboDamage = comboDamage + self.AA.Damage(target) * 2
+        end
+        if e then
+            comboDamage = comboDamage + self.E.Damage(target)
+            currentManaWasted = currentManaWasted + self.E.Mana()
+        end
+        if r then
+            comboDamage = comboDamage + self.R.Damage(target)
+            currentManaWasted = currentManaWasted + self.R.Mana()
+        end
+        comboDamage = comboDamage + self.AA.Damage(target) * 2
+        comboDamage = comboDamage + DamageItems(target)
+    end
+    comboDamage = comboDamage * self:GetOverkill()
+    return comboDamage, currentManaWasted
+end
+
+function _Draven:GetOverkill()
+    return (100 + self.Menu.Misc.overkill)/100
+end
+
+
+class "_AxesCatcher"
+function _AxesCatcher:__init()
+    self.AxesAvailables = {}
+    self.CurrentAxes = 0
+    self.Stack = 0
+    self.AxeRadius = 100
+    self.LimitTime = 1.2
+    self.Menu = nil
+    self.lastCheck = 0
+    self.ProjectileSpeed = myHero.range > 300 and VP:GetProjectileSpeed(myHero) or math.huge
+end
+
+function _AxesCatcher:LoadMenu(m)
+    self.Menu = m
+    if self.Menu ~= nil then
+        self.Menu:addParam("Catch", "Catch Axes (Toggle)", SCRIPT_PARAM_ONKEYTOGGLE, true, string.byte("Z"))
+        self.Menu:addParam("CatchMode", "Catch Condition", SCRIPT_PARAM_LIST, 1, { "When Orbwalking", "AutoCatch"})
+        self.Menu:addParam("OrbwalkMode",  "Catch Mode", SCRIPT_PARAM_LIST, 2, { "Mouse In Radius", "MyHero In Radius"})
+        self.Menu:addParam("AABetween", "Use AA between Catching", SCRIPT_PARAM_ONOFF, true)
+        self.Menu:addParam("UseW", "Use W to Catch (Smart)", SCRIPT_PARAM_ONOFF, false)
+        self.Menu:addParam("Turret", "Dont Catch Under Turret", SCRIPT_PARAM_ONOFF, true)
+        self.Menu:addParam("DelayCatch", "% of Delay to Catch", SCRIPT_PARAM_SLICE, 100, 0, 100)
+        self.Menu:addSubMenu("Catch Radius", "CatchRadius")
+            self.Menu.CatchRadius:addParam("Combo", "Combo Radius", SCRIPT_PARAM_SLICE, 250, 150, 600, 0)
+            self.Menu.CatchRadius:addParam("Harass", "Harass Radius", SCRIPT_PARAM_SLICE, 350, 150, 600, 0)
+            self.Menu.CatchRadius:addParam("Clear", "Clear Radius", SCRIPT_PARAM_SLICE, 400, 150, 800, 0)
+            self.Menu.CatchRadius:addParam("LastHit", "LastHit Radius", SCRIPT_PARAM_SLICE, 400, 150, 800, 0)
+        self.Menu:addParam("DrawRadius", "Draw Catch Radius", SCRIPT_PARAM_ONOFF, true)
+        self.Menu:addSubMenu("Draw Catch Radius", "Draw")
+            self.Menu.Draw:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 0, 0, 255 })
+            self.Menu.Draw:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, 25, 10, 100)
+        self.Menu:permaShow("Catch")
+        self.Menu:permaShow("CatchMode")
+        self.Menu:permaShow("OrbwalkMode")
+        --self.Menu:permaShow("DelayCatch")
+        AddDrawCallback(
+            function()
+                if self.Menu ~= nil and not myHero.dead then
+                    if self.Menu.Draw.Enable then
+                        if #self.AxesAvailables > 0 then
+                            for i = 1, #self.AxesAvailables, 1 do
+                                local axe, time = self.AxesAvailables[i][1], self.AxesAvailables[i][2]
+                                if axe~= nil and axe.valid then
+                                    local color = self.Menu.Draw.Color
+                                    local width = self.Menu.Draw.Width
+                                    local quality = self.Menu.Draw.Quality
+                                    DrawCircle3D(axe.x, axe.y, axe.z, self:GetRadius(), width, ARGB(color[1], color[2], color[3], color[4]), quality)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        )
+        AddCreateObjCallback(
+            function(obj)
+                if self.Menu == nil then return end
+                if obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("q_reticle_self.troy") and GetDistanceSqr(myHero, obj) <= (self.LimitTime * myHero.ms) * (self.LimitTime * myHero.ms) then
+                    table.insert(self.AxesAvailables, {obj, os.clock()})
+                    --DelayAction(function(i) table.remove(self.AxesAvailables, i) end, self.LimitTime + 0.05, {#self.AxesAvailable + 1} )
+                    DelayAction(function() self:RemoveAxe(obj) end, self.LimitTime + 0.2)
+                elseif obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("q_buf.troy") then
+                    self.CurrentAxes = self.CurrentAxes + 1
+                elseif obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("q_tar.troy") then
+                    --self.CurrentAxes = self.CurrentAxes + 1
+                elseif obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("reticlecatchsuccess.troy") then
+                    --print(GetDistance(myHero, obj))
+                    self:RemoveAxe(obj)
+                end
+            end
+        )
+        AddDeleteObjCallback(
+            function(obj)
+                if self.Menu == nil then return end
+                --if obj and obj.name and obj.name:lower():find("draven") then print("Deleted: "..obj.name) end
+                --if obj and obj.team and obj.team ~= myHero.team then return end
+                if obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("q_reticle.troy") then
+                    self:RemoveAxe(obj)
+                elseif obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("q_reticle_self.troy") then
+                elseif obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("q_buf.troy") then  
+                    if self.CurrentAxes > 0 then self.CurrentAxes = self.CurrentAxes - 1 end
+                elseif obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("q_tar.troy") then  
+                    --if self.CurrentAxes > 0 then self.CurrentAxes = self.CurrentAxes - 1 end
+                elseif obj and obj.name and obj.name:lower():find("draven") and obj.name:lower():find("reticlecatchsuccess.troy") then
+                end
+            end
+        )
+    end
+end
+
+function _AxesCatcher:GetCountAxes()
+    return #self.AxesAvailables + self.CurrentAxes
+end
+
+function _AxesCatcher:GetDelayCatch()
+    return (self.Menu~=nil and (self.Menu.DelayCatch / 100)) or 1
+end
+
+function _AxesCatcher:GetRadius()
+    if OM.Mode == ORBWALKER_MODE.Combo then
+        return self.Menu.CatchRadius.Combo
+    elseif OM.Mode == ORBWALKER_MODE.Harass then
+        return self.Menu.CatchRadius.Harass
+    elseif OM.Mode == ORBWALKER_MODE.Clear then
+        return self.Menu.CatchRadius.Clear
+    elseif OM.Mode == ORBWALKER_MODE.LastHit then
+        return self.Menu.CatchRadius.LastHit
+    elseif self.Menu~=nil then
+        return self.Menu.CatchRadius.Clear
+    end
+end
+
+function _AxesCatcher:InTurret(obj)
+    local offset = VP:GetHitBox(myHero) / 2
+    if obj ~= nil and obj.valid and self.Menu ~= nil and self.Menu.Turret then
+        if GetTurrets() ~= nil then
+            for name, turret in pairs(GetTurrets()) do
+                if turret ~= nil and turret.valid and GetDistanceSqr(obj, turret) <= (turret.range + offset) * (turret.range + offset) then
+                    if turret.team ~= myHero.team then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+function _AxesCatcher:GetBonusSpeed()
+    return myHero:GetSpellData(champ.W.Slot).level > 0 and (100 + 35 + myHero:GetSpellData(champ.W.Slot).level * 5)/100 or 1
+end
+
+function _AxesCatcher:GetSource()
+    return self.Menu.OrbwalkMode == 1 and Vector(mousePos) or Vector(myHero)
+end
+
+function _AxesCatcher:InRadius(axe)
+    return axe ~= nil and axe.valid and GetDistanceSqr(self:GetSource(), axe) < self:GetRadius() * self:GetRadius()
+end
+
+function _AxesCatcher:InAxeRadius(axe)
+    local AxeRadius = 1 / 1 * self.AxeRadius
+    return axe ~= nil and axe.valid and GetDistanceSqr(myHero.pos, axe) < AxeRadius * AxeRadius
+end
+
+--MEJORAR SELECCION I = 1
+
+function _AxesCatcher:GetBestAxe()
+    local List = self.AxesAvailables
+    local BestAxe, BestTime = nil, 0
+    if #List > 0 then
+        for i = 1, #List, 1 do
+            if List[i] then
+                local axe, time = List[i][1], List[i][2]
+                if axe~=nil and axe.valid then
+                    local timeLeft = self.LimitTime - (os.clock() - time)
+                    local AxeRadius = 1 / 1 * self.AxeRadius
+                    if timeLeft >= 0 and GetDistance(myHero, axe) - math.min(AxeRadius, GetDistance(myHero, axe)) + AxeRadius <= myHero.ms * timeLeft * self:GetDelayCatch() then
+                        if BestAxe == nil then BestAxe = axe BestTime = time
+                        else
+                            if (GetDistance(myHero, axe) - math.min(AxeRadius, GetDistance(myHero, axe)) )/time > (GetDistance(myHero, BestAxe) - math.min(AxeRadius, GetDistance(myHero, BestAxe)) )/BestTime then
+                                BestAxe = axe BestTime = time
+                            end
+                        end
+                    end
+
+                    if timeLeft <= 0 then
+                        self:RemoveAxe(axe)
+                    end
+                end
+            end
+        end
+    end
+    return BestAxe, BestTime
+end
+
+function _AxesCatcher:CheckCatch()
+    local List = self.AxesAvailables--self:GetSortedList()
+    if #List > 0 then
+        if self.Menu~=nil and self.Menu.Catch and (( self.Menu.CatchMode == 1 and OM.Mode ~= ORBWALKER_MODE.None) or self.Menu.CatchMode == 2 ) then
+            --for i = 1, #List, 1 do
+            local i = 1
+                local axe, time = List[i][1], List[i][2] --self:GetBestAxe()
+                if axe ~= nil and axe.valid and os.clock() - time <= self.LimitTime and self:InRadius(axe) and not self:InTurret(axe) then
+                    local timeLeft = self.LimitTime - (os.clock() - time)
+                    local AxeRadius = 1 / 1 * self.AxeRadius
+                    local AxeCatchPositionFromHero  = Vector(axe) + Vector(Vector(myHero) - Vector(axe)):normalized() * math.min(AxeRadius, GetDistance(myHero, axe))
+                    local AxeCatchPositionFromMouse = Vector(axe) + Vector(Vector(mousePos) - Vector(axe)):normalized() * math.min(AxeRadius, GetDistance(mousePos, axe))
+                    local OrbwalkPosition = Vector(myHero) + Vector(Vector(mousePos) - Vector(axe)):normalized() * AxeRadius
+                    local CanMove = false
+                    local CanAttack = false
+                    local time = timeLeft - ((GetDistance(myHero, AxeCatchPositionFromHero)) / myHero.ms) - (OM:WindUpTime() + 250/1000 + OM:Latency() + champ.AA.Range(champ.TS.target) / self.ProjectileSpeed)
+                    --Is in AxeRange
+                    if self:InAxeRadius(axe) then
+                        CanAttack = true
+                    --Can Attack Meanwhile
+                    elseif self.Menu.AABetween and time >= 0 and OM:CanAttack(0) and OM:CanAttack(time) then --+ orbwalker:WindUpTime() -
+                        CanAttack = true
+                        if champ.Menu.Misc.developer then print("Can Attack Meanwhile") end
+                    elseif OM:AnimationTime() * 1 + (GetDistance(myHero, AxeCatchPositionFromHero)) / myHero.ms < timeLeft then --+ orbwalker:WindUpTime()
+                        CanAttack = true
+                        if champ.Menu.Misc.developer then print("Can Attack Meanwhile2") end
+                    else
+                        CanAttack = false
+                    end
+                    if GetDistance(myHero, AxeCatchPositionFromHero) + 100 > myHero.ms * timeLeft * self:GetDelayCatch() then
+                        CanMove = false
+                        --can catch without W and self:GetCountAxes() > 1
+                        if not self:InAxeRadius(axe) and GetDistanceSqr(myHero, AxeCatchPositionFromHero) > (myHero.ms * timeLeft * 1.5) * (myHero.ms * timeLeft * 1.5) and GetDistanceSqr(myHero, AxeCatchPositionFromHero) < (myHero.ms * timeLeft * self:GetBonusSpeed()) * (myHero.ms * timeLeft * self:GetBonusSpeed()) then
+                            if self.Menu.UseW and self.W.IsReady() then
+                                CastSpell(self.W.Slot)
+                            end
+                        end
+                    --can orbwalk
+                    else
+                        CanMove = true
+                    end
+                    if CanAttack then
+                        OM:EnableAttacks()
+                    else
+                        OM:DisableAttacks()
+                    end
+                    if CanMove then
+                        OM:EnableMovement()
+                    else
+                        OM:DisableMovement()
+                        if not self:InAxeRadius(axe) and OM:CanMove() then
+                            if champ.Menu.Misc.developer then PrintMessage("Moving to Axe") end
+                            myHero:MoveTo(axe.x, axe.z) 
+                        end
+                    end
+                    self.lastCheck = os.clock()
+                end
+                if os.clock() - time > self.LimitTime + 0.2 then
+                    self:RemoveAxe(axe)
+                end
+            --end
+        else
+            OM:EnableAttacks()
+            OM:EnableMovement()
+        end
+    else
+        OM:EnableAttacks()
+        OM:EnableMovement()
+    end
+end
+
+function _AxesCatcher:RemoveAxe(obj)
+    if #self.AxesAvailables > 0 and obj ~= nil then
+        for i = 1, #self.AxesAvailables, 1 do
+            local axe, time = self.AxesAvailables[i][1], self.AxesAvailables[i][2]
+            if axe ~= nil and GetDistanceSqr(axe, obj) < 30 * 30 and axe.name == obj.name then
+                table.remove(self.AxesAvailables, i)
+                break
+            end
+        end
     end
 end
 
@@ -4566,5 +5272,7 @@ if SCRIPTSTATUS then
         assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("OBECIDHCEEA") 
     elseif myHero.charName == "Orianna" then
         assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("XKNLQOKQQLP") 
+    elseif myHero.charName == "Draven" then
+        assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("TGJHLHHIOHJ") 
     end
 end
