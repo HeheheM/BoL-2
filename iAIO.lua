@@ -1,6 +1,7 @@
+local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.007
+local version = 1.008
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true}
 if not champions[myHero.charName] then return end
 
@@ -390,6 +391,7 @@ function _Orianna:LoadMenu()
             if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
             self.TS.range = self.Q.Range + self.Q.Width
             self.TS.target = _GetTarget()
+            self.TS:update()
             if OM.Mode == ORBWALKER_MODE.Combo then self:Combo()
             elseif OM.Mode == ORBWALKER_MODE.Harass then self:Harass()
             elseif OM.Mode == ORBWALKER_MODE.Clear then self:Clear() 
@@ -1299,6 +1301,7 @@ function _Xerath:UpdateValues()
     self.R.Range = 2000 + 1200 * myHero:GetSpellData(self.R.Slot).level
     self.TS.range = self:GetRange()
     self.TS.target = _GetTarget()
+    self.TS:update()
     if self.R.IsReady() or self.R.IsCasting then
         self.R.Target = self:FindBestKillableTarget()
     end
@@ -1723,6 +1726,7 @@ function _Riven:LoadMenu()
         self.Menu.Draw.R:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
         self.Menu.Draw.R:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
         self.Menu.Draw.R:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+        self.Menu.Draw.R:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
         self.Menu.Draw:addParam("TimeQ","Show Time Left for Q", SCRIPT_PARAM_ONOFF, true)
         self.Menu.Draw:addParam("dmgCalc","Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
@@ -1842,7 +1846,7 @@ function _Riven:OnTick()
     local w = os.clock() - self.W.LastCastTime
     local e = os.clock() - self.E.LastCastTime
     local r = os.clock() - self.R.LastCastTime
-    local min = math.min(aa,q,w,e,r)
+    local min = math.min(aa, q, w, e, r)
     if min < self.Menu.Misc.humanizer then return end
     if not OM:CanCast() then return end
     if self.Menu.KillSteal.useQ or self.Menu.KillSteal.useW or self.Menu.KillSteal.useIgnite or self.Menu.KillSteal.useR2 or self.Menu.Combo.useR2 == 2 then
