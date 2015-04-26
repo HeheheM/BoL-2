@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.013
+local version = 1.014
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true, ["Lissandra"] = true}
 if not champions[myHero.charName] then return end
 
@@ -106,6 +106,7 @@ function OnLoad()
     if FileExist(LIB_PATH.."VPrediction.lua") then VP = VPrediction() table.insert(PredictionTable, "VPrediction") end
     --if VIP_USER and FileExist(LIB_PATH.."Prodiction.lua") then require "Prodiction" table.insert(PredictionTable, "Prodiction") end 
     if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then require "DivinePred" DP = DivinePred() table.insert(PredictionTable, "DivinePred") end
+    if FileExist(LIB_PATH.."HPrediction.lua") then require "HPrediction" HP = HPrediction() table.insert(PredictionTable, "HPrediction") end
 
     DelayAction(function() arrangePrioritys() end, 5)
 
@@ -126,6 +127,7 @@ function OnLoad()
 
     if champ~=nil then
         PrintMessage(champ.ScriptName.." by "..champ.Author.." loaded, Have Fun!.")
+        PrintMessage("Added HPrediction, enjoy.")
     end
 end
 
@@ -4755,6 +4757,8 @@ function _Prediction:TimeRequest()
         return 0.001
     elseif self:GetPredictionType() == "DivinePred" then
         return champ.Menu~=nil and champ.Menu.Misc.ExtraTime or 0.2
+    elseif self:GetPredictionType() == "HPrediction" then
+        return 0.001
     end
 end
 
@@ -4835,6 +4839,34 @@ function _Prediction:GetPrediction(target, spell)
             end
 
             return pos, -1, aoe and 1 or pos
+        elseif self:GetPredictionType() == "HPrediction" then
+            Spell_Q.collisionM[myHero.charName] = collision
+            Spell_Q.collisionH[myHero.charName] = collision
+            Spell_Q.delay[myHero.charName] = delay
+            Spell_Q.range[myHero.charName] = range
+            if skillshotType == "linear" then
+                Spell_Q.width[myHero.charName] = 2*width
+                if speed ~= math.huge then 
+                    Spell_Q.type[myHero.charName] = "DelayLine"
+                    Spell_Q.speed[myHero.charName] = speed
+                else
+                    Spell_Q.type[myHero.charName] = "PromptLine"
+                end
+            elseif skillshotType == "circular" then
+                Spell_Q.radius[myHero.charName] = width
+                if speed ~= math.huge then 
+                    Spell_Q.type[myHero.charName] = "DelayCircle"
+                    Spell_Q.speed[myHero.charName] = speed
+                else
+                    Spell_Q.type[myHero.charName] = "PromptCircle"
+                end
+            elseif skillshotType == "cone" then
+                Spell_Q.type[myHero.charName] = "DelayLine"
+                Spell_Q.width[myHero.charName] = width
+                Spell_Q.speed[myHero.charName] = speed
+            end
+            local pos, hitchance = HP:GetPredict("Q", target, self.source)
+            return pos, hitchance, pos
         end
     end
     return Vector(target), -1, Vector(target)
