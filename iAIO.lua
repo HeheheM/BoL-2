@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.014
+local version = 1.015
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true, ["Lissandra"] = true}
 if not champions[myHero.charName] then return end
 
@@ -3769,8 +3769,8 @@ function _AxesCatcher:CheckCatch()
                         CanMove = false
                         --can catch without W and self:GetCountAxes() > 1
                         if not self:InAxeRadius(axe) and GetDistanceSqr(myHero, AxeCatchPositionFromHero) > (myHero.ms * timeLeft * 1.5) * (myHero.ms * timeLeft * 1.5) and GetDistanceSqr(myHero, AxeCatchPositionFromHero) < (myHero.ms * timeLeft * self:GetBonusSpeed()) * (myHero.ms * timeLeft * self:GetBonusSpeed()) then
-                            if self.Menu.UseW and self.W.IsReady() then
-                                CastSpell(self.W.Slot)
+                            if self.Menu.UseW and champ.W.IsReady() then
+                                CastSpell(champ.W.Slot)
                             end
                         end
                     --can orbwalk
@@ -4833,39 +4833,39 @@ function _Prediction:GetPrediction(target, spell)
                     local hitchance = 2 - i
                     state, pos, perc = DP:predict(unit, asd, 1.2, Vector(self.source))
                     if state == SkillShot.STATUS.SUCCESS_HIT then 
-                        return pos, hitchance, perc
+                        return pos, hitchance, pos
                     end
                 --end
             end
 
             return pos, -1, aoe and 1 or pos
         elseif self:GetPredictionType() == "HPrediction" then
-            Spell_Q.collisionM[myHero.charName] = collision
-            Spell_Q.collisionH[myHero.charName] = collision
-            Spell_Q.delay[myHero.charName] = delay
-            Spell_Q.range[myHero.charName] = range
+            Spell_E.collisionM[myHero.charName] = collision
+            Spell_E.collisionH[myHero.charName] = collision
+            Spell_E.delay[myHero.charName] = delay
+            Spell_E.range[myHero.charName] = range
             if skillshotType == "linear" then
-                Spell_Q.width[myHero.charName] = 2*width
+                Spell_E.width[myHero.charName] = 2*width
                 if speed ~= math.huge then 
-                    Spell_Q.type[myHero.charName] = "DelayLine"
-                    Spell_Q.speed[myHero.charName] = speed
+                    Spell_E.type[myHero.charName] = "DelayLine"
+                    Spell_E.speed[myHero.charName] = speed
                 else
-                    Spell_Q.type[myHero.charName] = "PromptLine"
+                    Spell_E.type[myHero.charName] = "PromptLine"
                 end
             elseif skillshotType == "circular" then
-                Spell_Q.radius[myHero.charName] = width
+                Spell_E.radius[myHero.charName] = width
                 if speed ~= math.huge then 
-                    Spell_Q.type[myHero.charName] = "DelayCircle"
-                    Spell_Q.speed[myHero.charName] = speed
+                    Spell_E.type[myHero.charName] = "DelayCircle"
+                    Spell_E.speed[myHero.charName] = speed
                 else
-                    Spell_Q.type[myHero.charName] = "PromptCircle"
+                    Spell_E.type[myHero.charName] = "PromptCircle"
                 end
             elseif skillshotType == "cone" then
-                Spell_Q.type[myHero.charName] = "DelayLine"
-                Spell_Q.width[myHero.charName] = width
-                Spell_Q.speed[myHero.charName] = speed
+                Spell_E.type[myHero.charName] = "DelayLine"
+                Spell_E.width[myHero.charName] = width
+                Spell_E.speed[myHero.charName] = speed
             end
-            local pos, hitchance = HP:GetPredict("Q", target, self.source)
+            local pos, hitchance = HP:GetPredict("E", target, self.source)
             return pos, hitchance, pos
         end
     end
