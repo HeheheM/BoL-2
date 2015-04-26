@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.011
+local version = 1.012
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true, ["Lissandra"] = true}
 if not champions[myHero.charName] then return end
 
@@ -129,6 +129,126 @@ function OnLoad()
     end
 end
 
+class "_Irelia"
+function _Irelia:__init()
+    self.ScriptName = "Dat Butt Irelia"
+    self.Author = "iCreative"
+    self.MenuLoaded = false
+    self.Menu = nil
+    self.Passive = { Damage = function(target) return getDmg("P", target, myHero) end, IsReady = false}
+    self.AA = {            Range = function(target) local int1 = 50 if ValidTarget(target) then int1 = GetDistance(target.minBBox, target)/2 end return myHero.range + GetDistance(myHero, myHero.minBBox) + int1 end, Damage = function(target) return getDmg("AD", target, myHero) end }
+    self.Q  = { Slot = _Q, Range = 650, Width = 0, Delay = 0, Speed = 2200, LastCastTime = 0, Collision = true, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero) + getDmg("AD", target, myHero) end}
+    self.W  = { Slot = _W, Range = function(target) return self.AA.Range(target) end, ExtraRange = 500, Width = 315, Delay = 0.5, Speed = math.huge, LastCastTime = 0, Collision = false, IsReady = function() return myHero:CanUseSpell(_W) == READY end, Mana = function() return myHero:GetSpellData(_W).mana end, Damage = function(target) return getDmg("W", target, myHero) end}
+    self.E  = { Slot = _E, Range = 350, Width = 160, Delay = 0.3, Speed = math.huge, LastCastTime = 0, Collision = false, IsReady = function() return myHero:CanUseSpell(_E) == READY end, Mana = function() return myHero:GetSpellData(_E).mana end, Damage = function(target) return getDmg("E", target, myHero) end}
+    self.R  = { Slot = _R, Range = 1000, Width = 120, Delay = 0.5, Speed = 1600, LastCastTime = 0, Collision = false, Aoe = true, IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end}
+    self:LoadVariables()
+    self:LoadMenu()
+end
+
+function _Irelia:LoadVariables()
+    self.TS = TargetSelector(TARGET_LESS_CAST_PRIORITY, 900, DAMAGE_MAGIC)
+    self.EnemyMinions = minionManager(MINION_ENEMY, 900, myHero, MINION_SORT_MAXHEALTH_DEC)
+    self.JungleMinions = minionManager(MINION_JUNGLE, 700, myHero, MINION_SORT_MAXHEALTH_DEC)
+    self.Menu = scriptConfig(self.ScriptName.." by "..self.Author, self.ScriptName.."26042015")
+end
+
+function _Irelia:LoadMenu()
+    self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
+        self.Menu.TS:addTS(self.TS)
+        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
+        self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("minQRange", "Min. Q Range", SCRIPT_PARAM_SLICE, 250, 0, 650)
+        self.Menu.Combo:addParam("useQMinion","Use Q on Minion To GapClose", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useW","Use W", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useE","Use E", SCRIPT_PARAM_LIST, 2, { "Never", "To Stun", "Smart", "Always"})
+        self.Menu.Combo:addParam("useR","Use R", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useRMinion","Use R On Minion To GapClose", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useItems","Use Items", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Combo:addParam("useIgnite", "Use Ignite", SCRIPT_PARAM_LIST, 1, {"Never", "If Killable" , "Always"})
+        self.Menu.Combo:addParam("Range", "Max. Range to Combo", SCRIPT_PARAM_SLICE, 800, 150, 1000)
+
+    self.Menu:addSubMenu(myHero.charName.." - Harass Settings", "Harass")
+        self.Menu.Harass:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("minQRange", "Min. Q Range", SCRIPT_PARAM_SLICE, 250, 0, 650)
+        self.Menu.Harass:addParam("useQMinion","Use Q on Minion To GapClose", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("useW","Use W", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("useE","Use E", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Harass:addParam("Mana", "Min. Mana Percent", SCRIPT_PARAM_SLICE, 30, 0, 100)
+        self.Menu.Harass:addParam("Range", "Max. Range to Harass", SCRIPT_PARAM_SLICE, 350, 150, 600)
+
+    self.Menu:addSubMenu(myHero.charName.." - Clear Settings", "Clear")
+        self.Menu.Clear:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.Clear:addParam("maxQRange", "Max. Q Range", SCRIPT_PARAM_SLICE, 450, 0, 650)
+        self.Menu.Clear:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Clear:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.Clear:addParam("Mana", "Min. Mana Percent", SCRIPT_PARAM_SLICE, 30, 0, 100)
+
+    self.Menu:addSubMenu(myHero.charName.." - LastHit Settings", "LastHit")
+        self.Menu.LastHit:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.LastHit:addParam("maxQRange", "Max. Q Range", SCRIPT_PARAM_SLICE, 450, 0, 650)
+        self.Menu.LastHit:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.LastHit:addParam("Mana", "Min. Mana Percent", SCRIPT_PARAM_SLICE, 30, 0, 100)
+
+    self.Menu:addSubMenu(myHero.charName.." - KillSteal Settings", "KillSteal")
+        self.Menu.KillSteal:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+        self.Menu.KillSteal:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, false)
+        self.Menu.KillSteal:addParam("useIgnite", "Use Ignite", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Auto Settings", "Auto")
+        self.Menu.Auto:addSubMenu("Use QE To Interrupt", "useQE")
+            self.Int = _Interrupter(self.Menu.Auto.useQE, self.Q.Range + 500)
+            self.Int:CheckChannelingSpells()
+            self.Int:RegisterCallback(function(target, time, timeLimit) self:ForceQE(target, time, timeLimit) end)
+        self.Menu.Auto:addParam("useE", "Use E to Stun", SCRIPT_PARAM_ONOFF, false)
+
+    self.Menu:addSubMenu(myHero.charName.." - Misc Settings", "Misc")
+        self.Menu.Misc:addParam("predictionType",  "Type of prediction", SCRIPT_PARAM_LIST, 1, PredictionTable)
+        if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then self.Menu.Misc:addParam("ExtraTime","DPred Extra Time", SCRIPT_PARAM_SLICE, 0.13, 0, 1, 1) end
+        self.Menu.Misc:addParam("overkill", "Overkill % for Dmg Predict..", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+        self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
+
+    self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
+        self.Menu.Draw:addSubMenu("Q", "Q")
+            self.Menu.Draw.Q:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.Q:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.Q:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.Q:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
+        self.Menu.Draw:addSubMenu("E", "E")
+            self.Menu.Draw.E:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.E:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.E:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.E:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
+        self.Menu.Draw:addSubMenu("R", "R")
+            self.Menu.Draw.R:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu.Draw.R:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu.Draw.R:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu.Draw.R:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
+
+    self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
+        OM:LoadKeys(self.Menu.Keys)
+        self.Menu.Keys:addParam("Run", "Run", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
+end
+
+function _Irelia:CanStun(target)
+    return ValidTarget(target) and target.health/target.maxHealth * 100 >= myHero.health/myHero.maxHealth*100
+end
+
+function _Irelia:ForceQE(target, time, timeLimit)
+    if not ValidTarget(target) or os.clock() - time > timeLimit then return end
+    if self.E.IsReady() and ValidTarget(target, self.E.Range) then
+        self:CastE(target, 2)
+    elseif self.Q.IsReady() and ValidTarget(target, self.Q.Range) and self:CanStun(target) then
+        self:CastQ(target)
+    end
+    if ValidTarget(target, self.Q.Range + 500) then
+        DelayAction(function(target, time, timeLimit) self:ForceQE(target, time, timeLimit) end, 0.1, {target, time, timeLimit})
+    end
+end
 class "_Lissandra"
 function _Lissandra:__init()
     self.ScriptName = "The Ice Witch"
@@ -140,7 +260,7 @@ function _Lissandra:__init()
     self.Q  = { Slot = _Q, Range = 715, MinRange = 715, MaxRange = 815, Width = 100, Delay = 0.25, Speed = 2250, LastCastTime = 0, Collision = false, Aoe = true, Type = "linear", LastRequest2 = 0, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero) end, LastRange = 0}
     self.W  = { Slot = _W, Range = 440, Width = 440, Delay = 0.25, Speed = math.huge, LastCastTime = 0, Collision = false, Aoe = true, Type = "circular", IsReady = function() return (myHero:CanUseSpell(_W) == 3 or myHero:CanUseSpell(_W) == READY) end, Mana = function() return myHero:GetSpellData(_W).mana end, Damage = function(target) return getDmg("W", target, myHero) end}
     self.E  = { Slot = _E, Range = 1050, Width = 110, Delay = 0.25, Speed = 850, LastCastTime = 0, Collision = false, Aoe = true, Type = "linear", IsReady = function() return myHero:CanUseSpell(_E) == READY end, Mana = function() return myHero:GetSpellData(_E).mana end, Damage = function(target) return getDmg("E", target, myHero) end, CastObj = nil, EndObj = nil, MissileObj = nil}
-    self.R  = { Slot = _R, Range = 690, Width = 690, Delay = 0.25, Speed = math.huge, LastCastTime = 0, Collision = false, Aoe = true, Type = "circular", IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end}
+    self.R  = { Slot = _R, Range = 550, Width = 550, Delay = 0.25, Speed = math.huge, LastCastTime = 0, Collision = false, Aoe = true, Type = "circular", IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end}
     self:LoadVariables()
     self:LoadMenu()
 end
@@ -2376,11 +2496,11 @@ function _Riven:Combo()
             local dmg, mana = self:GetComboDamage(target, p, aa, q, w, e, r1, r2, items)
             if dmg > target.health then CastIgnite(target) end
         end
+        if self.Menu.Combo.useR1 > 1 or self.Menu.Combo.useR2 > 1 then self:CastR() end
         if self.queue:Size() > 0 then
             if self.Menu.Combo.useW then self:CastW() end
             self.queue:Execute()
         else
-            if self.Menu.Combo.useR1 > 1 or self.Menu.Combo.useR2 > 1 then self:CastR() end
             if self.Menu.Combo.useTiamat > 1 then self:CastTiamat(target) end
             if self.Menu.Combo.useW then self:CastW() end
             if self.Menu.Combo.useE then self:CastE() end
@@ -2529,11 +2649,11 @@ end
 function _Riven:CastE(targ)
     local target = ValidTarget(targ, self.E.Range) and targ or self.TS.target
     if self.E.IsReady() and ValidTarget(target, self.E.Range) then -- and (GetDistanceSqr(myHero, target) > self.E.Range * self.E.Range or (not self.Q.IsReady()) ) 
-        local CastPosition, HitChance = prediction:GetPrediction(target, self.E)
-        if CastPosition then --and GetDistanceSqr(myHero, target) > GetDistanceSqr(CastPosition, target) 
-            CastSpell(self.E.Slot, CastPosition.x, CastPosition.z)
+        --local CastPosition, HitChance = prediction:GetPrediction(target, self.E)
+        --if CastPosition then --and GetDistanceSqr(myHero, target) > GetDistanceSqr(CastPosition, target) 
+            CastSpell(self.E.Slot, target.x, target.z)
             return
-        end
+        --end
     elseif self.queue:Size() > 0 then
         local func, key, priority = self.queue:Get(1)
         if key:lower() == tostring("E"):lower() then
@@ -2569,6 +2689,10 @@ function _Riven:CastR1(targ)
         local CastPosition, HitChance = prediction:GetPrediction(target, self.R)
         if self.E.IsReady() and self.Menu.Misc.cancelR and CastPosition then
             CastSpell(self.E.Slot, CastPosition.x, CastPosition.z)
+            local boolean, count, highestPriority = self.queue:Contains("R1")
+            if not boolean then
+                self.queue:Insert(function() self:CastR1(target) end, "R1", 4)
+            end
             return
         end
         CastSpell(self.R.Slot)
@@ -2588,6 +2712,10 @@ function _Riven:CastR2(targ)
         if CastPosition and HitChance >= 1 then
             if self.E.IsReady() and self.Menu.Misc.cancelR then
                 CastSpell(self.E.Slot, CastPosition.x, CastPosition.z)
+                local boolean, count, highestPriority = self.queue:Contains("R2")
+                if not boolean then
+                    self.queue:Insert(function() self:CastR2(target) end, "R2", 4)
+                end
                 return
             end
             CastSpell(self.R.Slot, CastPosition.x, CastPosition.z)
@@ -2930,6 +3058,7 @@ function _Riven:CancelAnimation()
         if mode == 1 then
         elseif mode == 2 then
             local MovePos = myHero + Vector(Vector(myHero) - Vector(target)):normalized() * VP:GetHitBox(myHero) * 1.5
+            local MovePos = mousePos
             myHero:MoveTo(MovePos.x, MovePos.z)
         elseif mode == 3 then
             SendChat("/j")
@@ -3944,13 +4073,6 @@ function _OrbwalkManager:OnProcessSpell(unit, spell)
             self.AA.LastTarget = spell.target
             self.AA.isAttacking = true
             self.AA.LastTime = self:GetTime() - self:Latency()
-            DelayAction(
-                function() 
-                    self:TriggerAfterAttackCallback(spell)
-                    self.AA.isAttacking = false
-                    if self.GotReset then self.GotReset = false end
-                end
-            ,spell.windUpTime - self:Latency())
         elseif spell.name:lower():find("riventricleave") or spell.name:lower():find("tiamat") or spell.name:lower():find("hydra") then
             self.GotReset = true
             DelayAction(
@@ -4057,7 +4179,7 @@ end
 
 function _OrbwalkManager:CanMove(ExtraTime)
     local int = ExtraTime~=nil and ExtraTime or 0
-    return self:GetTime() - self.AA.LastTime + self:Latency() >= self:WindUpTime() + int and not self.AA.isAttacking and not self:Evade()
+    return self:GetTime() - self.AA.LastTime + self:Latency() >= self:WindUpTime() + int and not self:Evade()
 end
 
 function _OrbwalkManager:CanCast()
@@ -4087,7 +4209,16 @@ function _OrbwalkManager:TakeControl()
     end
     self.Menu:addParam("ExtraWindUp","Extra WindUpTime", SCRIPT_PARAM_SLICE, 0, -40, 200, 1)
     AddTickCallback(function()
-        if self:CanMove() then self:EnableMovement() else self:DisableMovement() end
+        if self:CanMove() then 
+                if self.AA.isAttacking then
+                    self:TriggerAfterAttackCallback(spell)
+                    self.AA.isAttacking = false
+                    if self.GotReset then self.GotReset = false end
+                end
+                self:EnableMovement() 
+            else 
+                self:DisableMovement() 
+        end
         if self:CanAttack() then self:EnableAttacks() else self:DisableAttacks() end
     end)
     if VIP_USER then HookPackets() end
@@ -4097,7 +4228,7 @@ function _OrbwalkManager:TakeControl()
                 p.pos = 2
                 if myHero.networkID == p:DecodeF() then
                     if not self:CanAttack() and not self:CanMove() and not self:Evade() then
-                        --Packet(p):block()
+                        Packet(p):block()
                     end
                 end
             end
@@ -4583,7 +4714,7 @@ end
 function _Queue:Execute()
     if self:Size() > 0 then
         if OM:CanCast() and OM.Mode ~= ORBWALKER_MODE.None then
-            --if champ:ShouldUseAA() then return end
+            if champ:ShouldUseAA() then return end
             local i = 1
             local func, key, priority = self:Get(i)
             if self:IsValidCast(key) and OM.Mode ~= ORBWALKER_MODE.None then
