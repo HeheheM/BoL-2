@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.012
+local version = 1.013
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true, ["Lissandra"] = true}
 if not champions[myHero.charName] then return end
 
@@ -2606,14 +2606,6 @@ end
 function _Riven:CastQ(targ)
     local target = ValidTarget(targ, self.Q.Range) and targ or self.TS.target
     if self.Q.IsReady() and ValidTarget(target) then
-        if self.Menu.Combo.useR2 == 3 and self.R.State and self.Q.State == 2 and not target.dead and self.R.IsReady() then
-            local boolean, count, highestPriority = self.queue:Contains("R2")
-            if not boolean then
-                self.queue:Insert(function() self:CastE(target) end, "R2", 4)
-                self.queue:Insert(function() self:CastR2(target) end, "Q", 3)
-                return
-            end
-        end
         local CastPosition, HitChance = prediction:GetPrediction(target, self.Q)
         if ValidTarget(target, self.Q.Range) then
             if CastPosition and HitChance >= 2 then
@@ -2792,6 +2784,12 @@ function _Riven:OnProcessSpell(unit, spell)
                         CastFlash(self.R.TS.target)
                     end 
                 end, 0.2)
+            DelayAction(
+                function() 
+                    if ValidTarget(self.R.TS.target) and OM.Mode == ORBWALKER_MODE.Combo and self.Menu.Keys.FlashCombo then 
+                        CastFlash(self.R.TS.target)
+                    end 
+                end, 0.4)
         elseif spell.name:lower():find("rivenizunablade") then
             self:AddStack()
             self:CancelAnimation()
