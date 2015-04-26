@@ -4714,7 +4714,7 @@ end
 function _Queue:Execute()
     if self:Size() > 0 then
         if OM:CanCast() and OM.Mode ~= ORBWALKER_MODE.None then
-            if champ:ShouldUseAA() then return end
+            --if champ:ShouldUseAA() then return end
             local i = 1
             local func, key, priority = self:Get(i)
             if self:IsValidCast(key) and OM.Mode ~= ORBWALKER_MODE.None then
