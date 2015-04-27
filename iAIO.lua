@@ -3984,7 +3984,7 @@ function _OrbwalkManager:TakeControl()
     if self.Menu == nil then
         self.Menu = scriptConfig("Orbwalk Manager", "OrbwalkManager".."27042015")
     end
-    self.Menu:addParam("ExtraWindUp","Extra WindUpTime", SCRIPT_PARAM_SLICE, 0, -40, 200, 1)
+    self.Menu:addParam("ExtraWindUp","Extra WindUpTime", SCRIPT_PARAM_SLICE, -10, -40, 200, 1)
     AddTickCallback(function()
         if self:CanMove() then 
                 if self.AA.isAttacking then
