@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.015
+local version = 1.016
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true, ["Lissandra"] = true}
 if not champions[myHero.charName] then return end
 
@@ -3792,6 +3792,9 @@ function _AxesCatcher:CheckCatch()
                         end
                     end
                     self.lastCheck = os.clock()
+                else
+                    OM:EnableAttacks()
+                    OM:EnableMovement()
                 end
                 if os.clock() - time > self.LimitTime + 0.2 then
                     self:RemoveAxe(axe)
