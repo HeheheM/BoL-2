@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.016
+local version = 1.017
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true, ["Lissandra"] = true}
 if not champions[myHero.charName] then return end
 
@@ -69,6 +69,9 @@ local Colors = {
 local ORBWALKER_MODE = {Combo = 0, Harass = 1, Clear = 3, LastHit = 4, None = -1}
 
 
+local PredictionTable = {}
+
+
 function CheckUpdate()
     if AUTOUPDATES then
         local ToUpdate = {}
@@ -102,16 +105,11 @@ function OnLoad()
     smiteslot = FindSummonerSlot("smite")
     flashslot = FindSummonerSlot("flash")
 
-    PredictionTable = {}
-    if FileExist(LIB_PATH.."VPrediction.lua") then VP = VPrediction() table.insert(PredictionTable, "VPrediction") end
-    --if VIP_USER and FileExist(LIB_PATH.."Prodiction.lua") then require "Prodiction" table.insert(PredictionTable, "Prodiction") end 
-    if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then require "DivinePred" DP = DivinePred() table.insert(PredictionTable, "DivinePred") end
-    if FileExist(LIB_PATH.."HPrediction.lua") then require "HPrediction" HP = HPrediction() table.insert(PredictionTable, "HPrediction") end
-
     DelayAction(function() arrangePrioritys() end, 5)
 
     prediction = _Prediction()
     OM = _OrbwalkManager()
+    CM = _CircleManager()
 
     if myHero.charName == "Riven" then
         champ = _Riven()
@@ -128,6 +126,68 @@ function OnLoad()
     if champ~=nil then
         PrintMessage(champ.ScriptName.." by "..champ.Author.." loaded, Have Fun!.")
         PrintMessage("Added HPrediction, enjoy.")
+    end
+end
+
+local CIRCLE_MANAGER = {CIRCLE_2D = 0, CIRCLE_3D = 1, CIRCLE_MINIMAP = 2}
+
+class "_CircleManager"
+function _CircleManager:__init()
+    self.objects = {}
+    self.Menu = nil
+end
+
+function _CircleManager:LoadMenu(menu)
+    self.Menu = menu
+    if self.Menu~=nil then
+        AddDrawCallback(
+            function()
+                if #self.objects > 0 then
+                    for _, object in ipairs(self.objects) do
+                        local range = object.Range()
+                        if self.Menu[object.Name].Enable and object.IsReady() then
+                            local source    = object.Position()
+                            local color     = self.Menu[object.Name].Color
+                            local width     = self.Menu[object.Name].Width
+                            local range     = object.Range()
+                            local quality   = self.Menu[object.Name].Quality
+                            local mode      = object.Mode
+                            if mode == CIRCLE_MANAGER.CIRCLE_2D then
+                                DrawCircle2D(source.x, source.y, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+                            elseif mode == CIRCLE_MANAGER.CIRCLE_3D then
+                                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+                            elseif mode == CIRCLE_MANAGER.CIRCLE_MINIMAP then
+                                DrawCircleMinimap(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+                            end
+                        end
+                    end
+                end
+            end
+        )
+    end
+end
+
+function _CircleManager:AddCircle(name, textParam, funcPosition, funcRange, funcIsReady, m)
+    if self.Menu~=nil then
+        local range = funcRange()
+        local mode = m~=nil and m or CIRCLE_MANAGER.CIRCLE_3D
+        self.Menu:addSubMenu(textParam, name)
+            self.Menu[name]:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            self.Menu[name]:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            self.Menu[name]:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            self.Menu[name]:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((range/5 + 10)/2), 40), 10, math.round(range/5))
+        table.insert(self.objects, {Name = name, Position = funcPosition, Range = funcRange, IsReady = funcIsReady, Mode = mode})
+    end
+end
+
+function _CircleManager:SetMode(name, mode)
+    if #self.objects > 0 then
+        for _, object in ipairs(self.objects) do
+            if object.Name == name then
+                object.Mode = mode
+                break
+            end
+        end
     end
 end
 
@@ -214,21 +274,10 @@ function _Irelia:LoadMenu()
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-        self.Menu.Draw:addSubMenu("Q", "Q")
-            self.Menu.Draw.Q:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.Q:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.Q:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.Q:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
-        self.Menu.Draw:addSubMenu("E", "E")
-            self.Menu.Draw.E:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.E:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.E:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.E:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
-        self.Menu.Draw:addSubMenu("R", "R")
-            self.Menu.Draw.R:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.R:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.R:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.R:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        CM:LoadMenu(self.Menu.Draw)
+        CM:AddCircle("Q","Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle("E","E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle("R","R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
@@ -349,26 +398,11 @@ function _Lissandra:LoadMenu()
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-        self.Menu.Draw:addSubMenu("Q", "Q")
-            self.Menu.Draw.Q:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.Q:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.Q:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.Q:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
-        self.Menu.Draw:addSubMenu("W", "W")
-            self.Menu.Draw.W:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.W:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.W:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.W:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.W.Range/5 + 10)/2), 40), 10, math.round(self.W.Range/5))
-        self.Menu.Draw:addSubMenu("E", "E")
-            self.Menu.Draw.E:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.E:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.E:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.E:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
-        self.Menu.Draw:addSubMenu("R", "R")
-            self.Menu.Draw.R:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.R:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.R:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.R:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        CM:LoadMenu(self.Menu.Draw)
+        CM:AddCircle("Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle("W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
+        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle("R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
         self.Menu.Draw:addParam("Passive", "Text if Passive Ready", SCRIPT_PARAM_ONOFF, true)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
@@ -454,42 +488,6 @@ function _Lissandra:LoadMenu()
         
             if self.Menu.TS.Range then
                 DrawCircle3D(myHero.x, myHero.y, myHero.z, self.TS.range, 1, Colors.Red, 40)
-            end
-        
-            if self.Menu.Draw.Q.Enable and self.Q.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.Q.Color
-                local width     = self.Menu.Draw.Q.Width
-                local range     =           self.Q.Range
-                local quality   = self.Menu.Draw.Q.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.W.Enable and self.W.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.W.Color
-                local width     = self.Menu.Draw.W.Width
-                local range     =           self.W.Range
-                local quality   = self.Menu.Draw.W.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.E.Enable and self.E.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.E.Color
-                local width     = self.Menu.Draw.E.Width
-                local range     =           self.E.Range
-                local quality   = self.Menu.Draw.E.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.R.Enable and self.R.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.R.Color
-                local width     = self.Menu.Draw.R.Width
-                local range     =           self.R.Range
-                local quality   = self.Menu.Draw.R.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
             end
 
             if self.Menu.Draw.Passive and self.Passive.IsReady then
@@ -931,31 +929,13 @@ function _Orianna:LoadMenu()
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-        self.Menu.Draw:addSubMenu("Q", "Q")
-            self.Menu.Draw.Q:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.Q:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.Q:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.Q:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
-        self.Menu.Draw:addSubMenu("W", "W")
-            self.Menu.Draw.W:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.W:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.W:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.W:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.W.Range/5 + 10)/2), 40), 10, math.round(self.W.Range/5))
-        self.Menu.Draw:addSubMenu("E", "E")
-            self.Menu.Draw.E:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.E:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.E:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.E:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
-        self.Menu.Draw:addSubMenu("R", "R")
-            self.Menu.Draw.R:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.R:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.R:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.R:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
-        self.Menu.Draw:addSubMenu("Ball Position", "BallPosition")
-            self.Menu.Draw.BallPosition:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.BallPosition:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.BallPosition:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.BallPosition:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, 10, 10, math.round(self.Q.Width/5))
+
+        CM:LoadMenu(self.Menu.Draw)
+        CM:AddCircle("Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle("W", "W", function() return self.Position end, function() return self.W.Range end, function() return self.W.IsReady() end)
+        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle("R", "R", function() return self.Position end, function() return self.R.Range end, function() return self.R.IsReady() end)
+        CM:AddCircle("BallPosition", "Ball Position", function() return self.Position end, function() return self.Q.Width end, function() return true end)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
@@ -1011,51 +991,6 @@ function _Orianna:LoadMenu()
         
             if self.Menu.TS.Range then
                 DrawCircle3D(myHero.x, myHero.y, myHero.z, self.TS.range, 1, Colors.Red, 40)
-            end
-        
-            if self.Menu.Draw.Q.Enable and self.Q.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.Q.Color
-                local width     = self.Menu.Draw.Q.Width
-                local range     =           self.Q.Range
-                local quality   = self.Menu.Draw.Q.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.W.Enable and self.W.IsReady() then
-                local source    = self.Position
-                local color     = self.Menu.Draw.W.Color
-                local width     = self.Menu.Draw.W.Width
-                local range     =           self.W.Range
-                local quality   = self.Menu.Draw.W.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.E.Enable and self.E.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.E.Color
-                local width     = self.Menu.Draw.E.Width
-                local range     =           self.E.Range
-                local quality   = self.Menu.Draw.E.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.R.Enable and self.R.IsReady() then
-                local source    = self.Position
-                local color     = self.Menu.Draw.R.Color
-                local width     = self.Menu.Draw.R.Width
-                local range     =           self.R.Range
-                local quality   = self.Menu.Draw.R.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-
-            if self.Menu.Draw.BallPosition.Enable then
-                local source    = self.Position
-                local color     = self.Menu.Draw.BallPosition.Color
-                local width     = self.Menu.Draw.BallPosition.Width
-                local range     =           self.Q.Width
-                local quality   = self.Menu.Draw.BallPosition.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
             end
         end
     )
@@ -1160,6 +1095,7 @@ function _Orianna:CastQ(target)
         local delay = self.Q.Delay --+ (GetDistance(p1, p2)/Q.Speed - 1)
         local range = GetDistance(self.Position, target) --+ W.Width / 2 --Q.Range
         prediction:SetSource(self.Position)
+        local spell = { Delay = self.Q.Delay, Width = self.Q.Width, Range = GetDistance(self.Position, target), Speed = self.Q.Speed, Type = self.Q.Type, Collision = self.Q.Collision, Aoe = self.Q.Aoe}
         local CastPosition,  HitChance,  Position = prediction:GetPrediction(target, self.Q)
         if CastPosition~=nil and HitChance >= 2 then
             CastSpell(self.Q.Slot, CastPosition.x, CastPosition.z)
@@ -1631,26 +1567,11 @@ function _Xerath:LoadMenu()
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-        self.Menu.Draw:addSubMenu("Q", "Q")
-            self.Menu.Draw.Q:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.Q:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.Q:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.Q:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
-        self.Menu.Draw:addSubMenu("W", "W")
-            self.Menu.Draw.W:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.W:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.W:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.W:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.W.Range/5 + 10)/2), 40), 10, math.round(self.W.Range/5))
-        self.Menu.Draw:addSubMenu("E", "E")
-            self.Menu.Draw.E:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.E:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.E:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.E:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
-        self.Menu.Draw:addSubMenu("R", "R")
-            self.Menu.Draw.R:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.R:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.R:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.R:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        CM:LoadMenu(self.Menu.Draw)
+        CM:AddCircle("Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle("W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
+        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle("R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end, CIRCLE_MANAGER.CIRCLE_MINIMAP)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
@@ -1815,43 +1736,6 @@ function _Xerath:LoadMenu()
             if self.Menu.TS.Range then
                 DrawCircle3D(myHero.x, myHero.y, myHero.z, self:GetRange(), 1, Colors.Red, 40)
             end
-        
-            if self.Menu.Draw.Q.Enable and self.Q.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.Q.Color
-                local width     = self.Menu.Draw.Q.Width
-                local range     =           self.Q.Range
-                local quality   = self.Menu.Draw.Q.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.W.Enable and self.W.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.W.Color
-                local width     = self.Menu.Draw.W.Width
-                local range     =           self.W.Range
-                local quality   = self.Menu.Draw.W.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.E.Enable and self.E.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.E.Color
-                local width     = self.Menu.Draw.E.Width
-                local range     =           self.E.Range
-                local quality   = self.Menu.Draw.E.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.R.Enable and self.R.IsReady() then
-                local source    = myHero
-                local color     = self.Menu.Draw.R.Color
-                local width     = self.Menu.Draw.R.Width
-                local range     =           self.R.Range
-                local quality   = self.Menu.Draw.R.Quality
-                DrawCircleMinimap(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
             if self.Menu.Ultimate.KillableR and (self.R.IsReady() or self.R.IsCasting) then
                 for idx, enemy in ipairs(GetEnemyHeroes()) do
                     local count = 0
@@ -2288,26 +2172,12 @@ function _Riven:LoadMenu()
         self.Menu.Misc:addParam("developer","Developer mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Draw Settings", "Draw")
-        self.Menu.Draw:addSubMenu("Q", "Q")
-        self.Menu.Draw.Q:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.Draw.Q:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-        self.Menu.Draw.Q:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-        self.Menu.Draw.Q:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.Q.Range/5 + 10)/2), 40), 10, math.round(self.Q.Range/5))
-        self.Menu.Draw:addSubMenu("W", "W")
-        self.Menu.Draw.W:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.Draw.W:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-        self.Menu.Draw.W:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-        self.Menu.Draw.W:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.W.Range/5 + 10)/2), 40), 10, math.round(self.W.Range/5))
-        self.Menu.Draw:addSubMenu("E", "E")
-        self.Menu.Draw.E:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.Draw.E:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-        self.Menu.Draw.E:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-        self.Menu.Draw.E:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
-        self.Menu.Draw:addSubMenu("R", "R")
-        self.Menu.Draw.R:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.Draw.R:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-        self.Menu.Draw.R:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-        self.Menu.Draw.R:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+        CM:LoadMenu(self.Menu.Draw)
+        CM:AddCircle("Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle("W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
+        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle("R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
+        
         self.Menu.Draw:addParam("TimeQ", "Show Time Left for Q", SCRIPT_PARAM_ONOFF, true)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
@@ -3013,42 +2883,6 @@ function _Riven:OnDraw()
             DrawText(string, 20, pos.x - 50, pos.y,  color)
         end
     end
-
-    if self.Menu.Draw.Q.Enable and self.Q.IsReady() then
-        local source    = myHero
-        local color     = self.Menu.Draw.Q.Color
-        local width     = self.Menu.Draw.Q.Width
-        local range     =           self.Q.Range
-        local quality   = self.Menu.Draw.Q.Quality
-        DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
-
-    if self.Menu.Draw.W.Enable and self.W.IsReady() then
-        local source    = myHero
-        local color     = self.Menu.Draw.W.Color
-        local width     = self.Menu.Draw.W.Width
-        local range     =           self.W.Range
-        local quality   = self.Menu.Draw.W.Quality
-        DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
-
-    if self.Menu.Draw.E.Enable and self.E.IsReady() then
-        local source    = myHero
-        local color     = self.Menu.Draw.E.Color
-        local width     = self.Menu.Draw.E.Width
-        local range     =           self.E.Range
-        local quality   = self.Menu.Draw.E.Quality
-        DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
-
-    if self.Menu.Draw.R.Enable and self.R.IsReady() then
-        local source    = myHero
-        local color     = self.Menu.Draw.R.Color
-        local width     = self.Menu.Draw.R.Width
-        local range     =           self.R.Range
-        local quality   = self.Menu.Draw.R.Quality
-        DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-    end
 end
 
 function _Riven:CancelAnimation()
@@ -3203,17 +3037,10 @@ function _Draven:LoadMenu()
         self.Menu.Misc:addParam("rRange","R Range", SCRIPT_PARAM_SLICE, 1800, 300, 6000, 0)
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
-    self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-        self.Menu.Draw:addSubMenu("E", "E")
-            self.Menu.Draw.E:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.E:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.E:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.E:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.E.Range/5 + 10)/2), 40), 10, math.round(self.E.Range/5))
-        self.Menu.Draw:addSubMenu("R", "R")
-            self.Menu.Draw.R:addParam("Enable","Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu.Draw.R:addParam("Color","Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu.Draw.R:addParam("Width","Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu.Draw.R:addParam("Quality","Quality", SCRIPT_PARAM_SLICE, math.min(math.round((self.R.Range/5 + 10)/2), 40), 10, math.round(self.R.Range/5))
+    self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")CM:LoadMenu(self.Menu.Draw)
+        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle("R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end, CIRCLE_MANAGER.CIRCLE_MINIMAP)
+        
         self.Menu.Draw:addParam("dmgCalc","Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
@@ -3264,24 +3091,6 @@ function _Draven:LoadMenu()
         
             if self.Menu.TS.Range then
                 DrawCircle3D(myHero.x, myHero.y, myHero.z, self.TS.range, 1, Colors.Red, 40)
-            end
-        
-            if self.Menu.Draw.E.Enable and self.E.IsReady() then
-                local source    = Vector(myHero)
-                local color     = self.Menu.Draw.E.Color
-                local width     = self.Menu.Draw.E.Radius
-                local range     =           self.E.Range
-                local quality   = self.Menu.Draw.E.Quality
-                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-            end
-        
-            if self.Menu.Draw.R.Enable and self.R.IsReady() then
-                local source    = Vector(myHero)
-                local color     = self.Menu.Draw.R.Color
-                local width     = self.Menu.Draw.R.Radius
-                local range     =           self.R.Range
-                local quality   = self.Menu.Draw.R.Quality
-                DrawCircleMinimap(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
             end
         end
     )
@@ -3704,8 +3513,6 @@ function _AxesCatcher:InAxeRadius(axe)
     local AxeRadius = 1 / 1 * self.AxeRadius
     return axe ~= nil and axe.valid and GetDistanceSqr(myHero.pos, axe) < AxeRadius * AxeRadius
 end
-
---MEJORAR SELECCION I = 1
 
 function _AxesCatcher:GetBestAxe()
     local List = self.AxesAvailables
@@ -4733,10 +4540,26 @@ end
 
 class "_Prediction"
 function _Prediction:__init()
+    if FileExist(LIB_PATH.."VPrediction.lua") then VP = VPrediction() table.insert(PredictionTable, "VPrediction") end
+    --if VIP_USER and FileExist(LIB_PATH.."Prodiction.lua") then require "Prodiction" table.insert(PredictionTable, "Prodiction") end 
+    if VIP_USER and FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then require "DivinePred" DP = DivinePred() table.insert(PredictionTable, "DivinePred") end
+    if FileExist(LIB_PATH.."HPrediction.lua") then require "HPrediction" HP = HPrediction() table.insert(PredictionTable, "HPrediction") end
+    self.Menu = nil
     self.delay = 0.07
     self.LastRequest = 0
     self.source = myHero
     self.ProjectileSpeed = myHero.range > 300 and VP:GetProjectileSpeed(myHero) or math.huge
+end
+
+function _Prediction:LoadMenu(menu)
+    self.Menu = menu
+    if self.Menu ~= nil then
+        for i = 1, #PredictionTable do
+            if PredictionTable[i] == "VPrediction" then
+
+            end
+        end
+    end
 end
 
 function _Prediction:ValidRequest()
