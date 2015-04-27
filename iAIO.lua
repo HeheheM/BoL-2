@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.017
+local version = 1.018
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true, ["Lissandra"] = true}
 if not champions[myHero.charName] then return end
 
@@ -134,49 +134,43 @@ local CIRCLE_MANAGER = {CIRCLE_2D = 0, CIRCLE_3D = 1, CIRCLE_MINIMAP = 2}
 class "_CircleManager"
 function _CircleManager:__init()
     self.objects = {}
-    self.Menu = nil
-end
-
-function _CircleManager:LoadMenu(menu)
-    self.Menu = menu
-    if self.Menu~=nil then
-        AddDrawCallback(
-            function()
-                if #self.objects > 0 then
-                    for _, object in ipairs(self.objects) do
-                        local range = object.Range()
-                        if self.Menu[object.Name].Enable and object.IsReady() then
-                            local source    = object.Position()
-                            local color     = self.Menu[object.Name].Color
-                            local width     = self.Menu[object.Name].Width
-                            local range     = object.Range()
-                            local quality   = self.Menu[object.Name].Quality
-                            local mode      = object.Mode
-                            if mode == CIRCLE_MANAGER.CIRCLE_2D then
-                                DrawCircle2D(source.x, source.y, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-                            elseif mode == CIRCLE_MANAGER.CIRCLE_3D then
-                                DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-                            elseif mode == CIRCLE_MANAGER.CIRCLE_MINIMAP then
-                                DrawCircleMinimap(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
-                            end
+    AddDrawCallback(
+        function()
+            if #self.objects > 0 then
+                for _, object in ipairs(self.objects) do
+                    local range = object.Range()
+                    local menu = object.Menu
+                    if menu[object.Name].Enable and object.IsReady() then
+                        local source    = object.Position()
+                        local color     = menu[object.Name].Color
+                        local width     = menu[object.Name].Width
+                        local range     = object.Range()
+                        local quality   = menu[object.Name].Quality
+                        local mode      = object.Mode
+                        if mode == CIRCLE_MANAGER.CIRCLE_2D then
+                            DrawCircle2D(source.x, source.y, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+                        elseif mode == CIRCLE_MANAGER.CIRCLE_3D then
+                            DrawCircle3D(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
+                        elseif mode == CIRCLE_MANAGER.CIRCLE_MINIMAP then
+                            DrawCircleMinimap(source.x, source.y, source.z, range, width, ARGB(color[1], color[2], color[3], color[4]), quality)
                         end
                     end
                 end
             end
-        )
-    end
+        end
+    )
 end
 
-function _CircleManager:AddCircle(name, textParam, funcPosition, funcRange, funcIsReady, m)
-    if self.Menu~=nil then
+function _CircleManager:AddCircle(menu, name, textParam, funcPosition, funcRange, funcIsReady, m)
+    if menu~=nil then
         local range = funcRange()
         local mode = m~=nil and m or CIRCLE_MANAGER.CIRCLE_3D
-        self.Menu:addSubMenu(textParam, name)
-            self.Menu[name]:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
-            self.Menu[name]:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
-            self.Menu[name]:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
-            self.Menu[name]:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((range/5 + 10)/2), 40), 10, math.round(range/5))
-        table.insert(self.objects, {Name = name, Position = funcPosition, Range = funcRange, IsReady = funcIsReady, Mode = mode})
+        menu:addSubMenu(textParam, name)
+            menu[name]:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
+            menu[name]:addParam("Color", "Color", SCRIPT_PARAM_COLOR, { 255, 255, 255, 255 })
+            menu[name]:addParam("Width", "Width", SCRIPT_PARAM_SLICE, 1, 1, 5)
+            menu[name]:addParam("Quality", "Quality", SCRIPT_PARAM_SLICE, math.min(math.round((range/5 + 10)/2), 30), 10, math.round(range/5))
+        table.insert(self.objects, {Menu = menu, Name = name, Position = funcPosition, Range = funcRange, IsReady = funcIsReady, Mode = mode})
     end
 end
 
@@ -187,6 +181,15 @@ function _CircleManager:SetMode(name, mode)
                 object.Mode = mode
                 break
             end
+        end
+    end
+end
+
+function _CircleManager:SetColor(name, tabColor)
+    for _, object in ipairs(self.objects) do
+        if object.Name == name then
+            object.Menu[object.Name].Color = tabColor
+            break
         end
     end
 end
@@ -217,8 +220,10 @@ end
 function _Irelia:LoadMenu()
     self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
         self.Menu.TS:addTS(self.TS)
-        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+        CM:AddCircle(self.Menu.TS, "DrawTS", "Draw circle on Target", function() return self.TS.target end, function() return 120 end, function() return ValidTarget(self.TS.target, self.TS.range) end)
+        CM:SetColor("DrawTS", {255, 255, 0, 0})
+        CM:AddCircle(self.Menu.TS, "RangeTS", "Draw circle for Range", function() return myHero end, function() return self.TS.range end, function() return true end)
+        CM:SetColor("RangeTS", {255, 255, 0, 0})
 
     self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
         self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
@@ -274,10 +279,9 @@ function _Irelia:LoadMenu()
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-        CM:LoadMenu(self.Menu.Draw)
-        CM:AddCircle("Q","Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
-        CM:AddCircle("E","E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
-        CM:AddCircle("R","R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "Q","Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "E","E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "R","R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
@@ -327,8 +331,10 @@ end
 function _Lissandra:LoadMenu()
     self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
         self.Menu.TS:addTS(self.TS)
-        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+        CM:AddCircle(self.Menu.TS, "DrawTS", "Draw circle on Target", function() return self.TS.target end, function() return 120 end, function() return ValidTarget(self.TS.target, self.TS.range) end)
+        CM:SetColor("DrawTS", {255, 255, 0, 0})
+        CM:AddCircle(self.Menu.TS, "RangeTS", "Draw circle for Range", function() return myHero end, function() return self.TS.range end, function() return true end)
+        CM:SetColor("RangeTS", {255, 255, 0, 0})
 
     self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
         self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
@@ -398,11 +404,10 @@ function _Lissandra:LoadMenu()
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-        CM:LoadMenu(self.Menu.Draw)
-        CM:AddCircle("Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
-        CM:AddCircle("W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
-        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
-        CM:AddCircle("R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
         self.Menu.Draw:addParam("Passive", "Text if Passive Ready", SCRIPT_PARAM_ONOFF, true)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
@@ -481,14 +486,6 @@ function _Lissandra:LoadMenu()
         function()
             if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
             if self.Menu.Draw.dmgCalc then DrawPredictedDamage() end
-            if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
-                local source = self.TS.target
-                DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
-            end
-        
-            if self.Menu.TS.Range then
-                DrawCircle3D(myHero.x, myHero.y, myHero.z, self.TS.range, 1, Colors.Red, 40)
-            end
 
             if self.Menu.Draw.Passive and self.Passive.IsReady then
                 local target = self.TS.target
@@ -864,8 +861,10 @@ end
 function _Orianna:LoadMenu()
     self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
         self.Menu.TS:addTS(self.TS)
-        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+        CM:AddCircle(self.Menu.TS, "DrawTS", "Draw circle on Target", function() return self.TS.target end, function() return 120 end, function() return ValidTarget(self.TS.target, self.TS.range) end)
+        CM:SetColor("DrawTS", {255, 255, 0, 0})
+        CM:AddCircle(self.Menu.TS, "RangeTS", "Draw circle for Range", function() return myHero end, function() return self.TS.range end, function() return true end)
+        CM:SetColor("RangeTS", {255, 255, 0, 0})
 
     self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
         self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
@@ -929,13 +928,11 @@ function _Orianna:LoadMenu()
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-
-        CM:LoadMenu(self.Menu.Draw)
-        CM:AddCircle("Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
-        CM:AddCircle("W", "W", function() return self.Position end, function() return self.W.Range end, function() return self.W.IsReady() end)
-        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
-        CM:AddCircle("R", "R", function() return self.Position end, function() return self.R.Range end, function() return self.R.IsReady() end)
-        CM:AddCircle("BallPosition", "Ball Position", function() return self.Position end, function() return self.Q.Width end, function() return true end)
+        CM:AddCircle(self.Menu.Draw, "Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "W", "W", function() return self.Position end, function() return self.W.Range end, function() return self.W.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "R", "R", function() return self.Position end, function() return self.R.Range end, function() return self.R.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "BallPosition", "Ball Position", function() return self.Position end, function() return self.Q.Width end, function() return true end)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
@@ -984,14 +981,6 @@ function _Orianna:LoadMenu()
         function()
             if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
             if self.Menu.Draw.dmgCalc then DrawPredictedDamage() end
-            if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
-                local source = self.TS.target
-                DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
-            end
-        
-            if self.Menu.TS.Range then
-                DrawCircle3D(myHero.x, myHero.y, myHero.z, self.TS.range, 1, Colors.Red, 40)
-            end
         end
     )
 
@@ -1507,8 +1496,10 @@ function _Xerath:LoadMenu()
 
     self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
         self.Menu.TS:addTS(self.TS)
-        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+        CM:AddCircle(self.Menu.TS, "DrawTS", "Draw circle on Target", function() return self.TS.target end, function() return 120 end, function() return ValidTarget(self.TS.target, self.TS.range) end)
+        CM:SetColor("DrawTS", {255, 255, 0, 0})
+        CM:AddCircle(self.Menu.TS, "RangeTS", "Draw circle for Range", function() return myHero end, function() return self.TS.range end, function() return true end)
+        CM:SetColor("RangeTS", {255, 255, 0, 0})
 
     self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
         self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
@@ -1567,11 +1558,10 @@ function _Xerath:LoadMenu()
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
-        CM:LoadMenu(self.Menu.Draw)
-        CM:AddCircle("Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
-        CM:AddCircle("W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
-        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
-        CM:AddCircle("R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end, CIRCLE_MANAGER.CIRCLE_MINIMAP)
+        CM:AddCircle(self.Menu.Draw, "Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end, CIRCLE_MANAGER.CIRCLE_MINIMAP)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
     self.Menu:addSubMenu(myHero.charName.." - Key Settings", "Keys")
@@ -1728,14 +1718,6 @@ function _Xerath:LoadMenu()
         function() 
             if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
             if self.Menu.Draw.dmgCalc then DrawPredictedDamage() end
-            if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
-                local source = self.TS.target
-                DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
-            end
-        
-            if self.Menu.TS.Range then
-                DrawCircle3D(myHero.x, myHero.y, myHero.z, self:GetRange(), 1, Colors.Red, 40)
-            end
             if self.Menu.Ultimate.KillableR and (self.R.IsReady() or self.R.IsCasting) then
                 for idx, enemy in ipairs(GetEnemyHeroes()) do
                     local count = 0
@@ -2105,10 +2087,10 @@ function _Riven:LoadMenu()
 
     self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
         self.Menu.TS:addTS(self.TS)
-        self.Menu.TS:addParam("Combo", "Range for Combo", SCRIPT_PARAM_SLICE, 900, 150, 1100, 0)
-        self.Menu.TS:addParam("Harass", "Range for Harass", SCRIPT_PARAM_SLICE, 350, 150, 900, 0)
-        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+        CM:AddCircle(self.Menu.TS, "DrawTS", "Draw circle on Target", function() return self.TS.target end, function() return 120 end, function() return ValidTarget(self.TS.target, self.TS.range) end)
+        CM:SetColor("DrawTS", {255, 255, 0, 0})
+        CM:AddCircle(self.Menu.TS, "RangeTS", "Draw circle for Range", function() return myHero end, function() return self.TS.range end, function() return true end)
+        CM:SetColor("RangeTS", {255, 255, 0, 0})
 
     self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
         self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_ONOFF, true)
@@ -2172,11 +2154,10 @@ function _Riven:LoadMenu()
         self.Menu.Misc:addParam("developer","Developer mode", SCRIPT_PARAM_ONOFF, false)
 
     self.Menu:addSubMenu(myHero.charName.." - Draw Settings", "Draw")
-        CM:LoadMenu(self.Menu.Draw)
-        CM:AddCircle("Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
-        CM:AddCircle("W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
-        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
-        CM:AddCircle("R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "Q", "Q", function() return myHero end, function() return self.Q.Range end, function() return self.Q.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "W", "W", function() return myHero end, function() return self.W.Range end, function() return self.W.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end)
         
         self.Menu.Draw:addParam("TimeQ", "Show Time Left for Q", SCRIPT_PARAM_ONOFF, true)
         self.Menu.Draw:addParam("dmgCalc", "Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
@@ -2194,7 +2175,7 @@ function _Riven:LoadMenu()
         self.Menu.Keys.Run     = false
         self.Menu.Keys.WallJump     = false
 
-    PrintMessage(self.ScriptName, "If the Orbwalker cancel your AA, go to Orbwalk Manager and modify the value of Extra WindUpTime, between 80 - 180 should be OK.")
+    PrintMessage(self.ScriptName, "If the Orbwalker cancel your AA, go to Orbwalk Manager and modify the value of Extra WindUpTime")
     AddDrawCallback(function() self:OnDraw() end)
     AddTickCallback(function() self:OnTick() end)
     AddProcessSpellCallback(function(unit, spell) self:OnProcessSpell(unit, spell) end)
@@ -2835,14 +2816,6 @@ function _Riven:OnDraw()
     -- body
     if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
     if self.Menu.Draw.dmgCalc then self:DrawPredictedDamage() end
-    if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
-        local source = self.TS.target
-        DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
-    end
-
-    if self.Menu.TS.Range then
-        DrawCircle3D(myHero.x, myHero.y, myHero.z, self:GetRange(), 1, Colors.Red, 40)
-    end
 
     if self.Menu.Misc.developer then
         local pos = WorldToScreen(D3DXVECTOR3(myHero.x , myHero.y, myHero.z))
@@ -2980,8 +2953,10 @@ end
 function _Draven:LoadMenu()
     self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
         self.Menu.TS:addTS(self.TS)
-        self.Menu.TS:addParam("Draw","Draw circle on Target", SCRIPT_PARAM_ONOFF, true)
-        self.Menu.TS:addParam("Range","Draw circle for Range", SCRIPT_PARAM_ONOFF, true)
+        CM:AddCircle(self.Menu.TS, "DrawTS", "Draw circle on Target", function() return self.TS.target end, function() return 120 end, function() return ValidTarget(self.TS.target, self.TS.range) end)
+        CM:SetColor("DrawTS", {255, 255, 0, 0})
+        CM:AddCircle(self.Menu.TS, "RangeTS", "Draw circle for Range", function() return myHero end, function() return self.TS.range end, function() return true end)
+        CM:SetColor("RangeTS", {255, 255, 0, 0})
 
     self.Menu:addSubMenu(myHero.charName.." - Combo Settings", "Combo")
         self.Menu.Combo:addParam("useQ","Use Q", SCRIPT_PARAM_LIST, 3, { "Zero Spins", "One Spin", "Two Spins"})
@@ -3037,9 +3012,9 @@ function _Draven:LoadMenu()
         self.Menu.Misc:addParam("rRange","R Range", SCRIPT_PARAM_SLICE, 1800, 300, 6000, 0)
         self.Menu.Misc:addParam("developer", "Developer Mode", SCRIPT_PARAM_ONOFF, false)
 
-    self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")CM:LoadMenu(self.Menu.Draw)
-        CM:AddCircle("E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
-        CM:AddCircle("R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end, CIRCLE_MANAGER.CIRCLE_MINIMAP)
+    self.Menu:addSubMenu(myHero.charName.." - Drawing Settings", "Draw")
+        CM:AddCircle(self.Menu.Draw, "E", "E", function() return myHero end, function() return self.E.Range end, function() return self.E.IsReady() end)
+        CM:AddCircle(self.Menu.Draw, "R", "R", function() return myHero end, function() return self.R.Range end, function() return self.R.IsReady() end, CIRCLE_MANAGER.CIRCLE_MINIMAP)
         
         self.Menu.Draw:addParam("dmgCalc","Damage Prediction Bar", SCRIPT_PARAM_ONOFF, true)
 
@@ -3084,14 +3059,6 @@ function _Draven:LoadMenu()
         function()
             if myHero.dead or self.Menu == nil or not self.MenuLoaded then return end
             if self.Menu.Draw.dmgCalc then DrawPredictedDamage() end
-            if self.Menu.TS.Draw and ValidTarget(self.TS.target) then
-                local source = self.TS.target
-                DrawCircle3D(source.x, source.y, source.z, 120, 2, Colors.Red, 10)
-            end
-        
-            if self.Menu.TS.Range then
-                DrawCircle3D(myHero.x, myHero.y, myHero.z, self.TS.range, 1, Colors.Red, 40)
-            end
         end
     )
     AddCreateObjCallback(
@@ -4005,7 +3972,7 @@ function _OrbwalkManager:MyRange(target)
     if ValidTarget(target) then 
         int1 = GetDistance(target.minBBox, target)/2 
     end
-    return myHero.range + GetDistance(myHero, myHero.minBBox) + int1
+    return myHero.range + myHero.boundingRadius
 end
 
 function _OrbwalkManager:InRange(target, off)
@@ -4015,7 +3982,7 @@ end
 
 function _OrbwalkManager:TakeControl()
     if self.Menu == nil then
-        self.Menu = scriptConfig("Orbwalk Manager", "OrbwalkManager".."1.0")
+        self.Menu = scriptConfig("Orbwalk Manager", "OrbwalkManager".."27042015")
     end
     self.Menu:addParam("ExtraWindUp","Extra WindUpTime", SCRIPT_PARAM_SLICE, 0, -40, 200, 1)
     AddTickCallback(function()
@@ -5165,7 +5132,7 @@ end
 
 function SetPriority(table, hero, priority)
     for i=1, #table, 1 do
-        if hero.charName:find(table[i]) ~= nil then
+        if hero.charName:find(table[i]) ~= nil and type(priority) == "number" then
             TS_SetHeroPriority(priority, hero.charName)
         end
     end
