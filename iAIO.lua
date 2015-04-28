@@ -1,7 +1,7 @@
 local AUTOUPDATES = true
 local SCRIPTSTATUS = true
 local ScriptName = "iCreative's AIO"
-local version = 1.018
+local version = 1.019
 local champions = {["Riven"] = true, ["Xerath"] = true, ["Orianna"] = true, ["Draven"] = true, ["Lissandra"] = true}
 if not champions[myHero.charName] then return end
 
@@ -2087,6 +2087,8 @@ function _Riven:LoadMenu()
 
     self.Menu:addSubMenu(myHero.charName.." - Target Selector Settings", "TS")
         self.Menu.TS:addTS(self.TS)
+        self.Menu.TS:addParam("Combo", "Range for Combo", SCRIPT_PARAM_SLICE, 900, 150, 1100, 0)
+        self.Menu.TS:addParam("Harass", "Range for Harass", SCRIPT_PARAM_SLICE, 350, 150, 900, 0)
         CM:AddCircle(self.Menu.TS, "DrawTS", "Draw circle on Target", function() return self.TS.target end, function() return 120 end, function() return ValidTarget(self.TS.target, self.TS.range) end)
         CM:SetColor("DrawTS", {255, 255, 0, 0})
         CM:AddCircle(self.Menu.TS, "RangeTS", "Draw circle for Range", function() return myHero end, function() return self.TS.range end, function() return true end)
