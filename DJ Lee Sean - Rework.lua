@@ -10,7 +10,7 @@ local AUTOUPDATES = true --CHANGE THIS TO FALSE IF YOU DON'T WANT AUTOUPDATES
 local FixItems = false -- CHANGE THIS TRUE OR FALSE IF BOL IS SUPPORTING ITEMS OR NOT
 local scriptname = "DJ Lee Sean"
 local author = "iCreative"
-local version = 0.305
+local version = 0.306
 local champion = "LeeSin"
 if myHero.charName:lower() ~= champion:lower() then return end
 --tracker
@@ -365,7 +365,7 @@ function KillSteal()
                 if dmg >= enemy.health then
                     if Config.KillSteal.useQ and (Q.Damage(enemy) > enemy.health or q) and myHero.health/myHero.maxHealth >= enemy.health/enemy.maxHealth and not enemy.dead then CastQ(enemy) end
                     if Config.KillSteal.useE and (E.Damage(enemy) > enemy.health or e) and not enemy.dead then CastE(enemy) end
-                    if Config.KillSteal.useR and (R.Damage(enemy) > enemy.health or r) and not enemy.dead then CastR(enemy) end
+                    if Config.KillSteal.useR and (R.Damage(enemy) > enemy.health) and not enemy.dead then CastR(enemy) end
                 end
                 if Config.KillSteal.useIgnite and Ignite.IsReady() and Ignite.Damage(enemy) > enemy.health and not enemy.dead  and GetDistanceSqr(myHero, enemy) < Ignite.Range * Ignite.Range then CastSpell(igniteslot, enemy) end
             end
