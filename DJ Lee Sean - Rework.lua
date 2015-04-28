@@ -1441,7 +1441,7 @@ end
 
 function Insec:GapClose(from, target, to, mode)
     local distanceBetween = self:DistanceBetween(myHero, target)
-    local Position, HitChance, _ = prediction:GetPredictedPos(target, W.Delay + (distanceBetween + GetDistance(from, target) + 100)/W.Speed)
+    local Position, HitChance, _ = prediction:GetPredictedPos(target, W.Delay + (distanceBetween + GetDistance(from, target))/W.Speed)
     --local Position = Vector(target)
     if Position ~= nil then
         local GapClosePos = Vector(Position) + Vector(Position.x - to.x, 0,  Position.z - to.z):normalized() * 600
