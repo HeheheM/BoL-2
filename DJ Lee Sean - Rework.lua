@@ -10,7 +10,7 @@ local AUTOUPDATES = true --CHANGE THIS TO FALSE IF YOU DON'T WANT AUTOUPDATES
 local FixItems = false -- CHANGE THIS TRUE OR FALSE IF BOL IS SUPPORTING ITEMS OR NOT
 local scriptname = "DJ Lee Sean"
 local author = "iCreative"
-local version = 0.304
+local version = 0.305
 local champion = "LeeSin"
 if myHero.charName:lower() ~= champion:lower() then return end
 --tracker
@@ -23,7 +23,7 @@ local P = { Damage = function(target) return getDmg("P", target, myHero) end , S
 local AA = { Range = function(target) 
 local int1 = 0 if ValidTarget(target) then int1 = GetDistance(target.minBBox, target)/2 end
 return myHero.range + GetDistance(myHero, myHero.minBBox) + int1 + 100 end, Damage = function(target) return getDmg("AD", target, myHero) end }
-local Q = { Range = function() if myHero:GetSpellData(_Q).name:lower():find("one") then return 1100 else return 1300 end end, Width = 60, Delay = 0.25, Speed = 1800, LastCastTime1 = 0, LastCastTime2 = 0, Collision = true, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero, 3) end, State = function() if myHero:GetSpellData(_Q).name:lower():find("one") then return 1 else return 2 end end , Obj = nil, IsFlying = false, Target = nil}
+local Q = { Range = function() if myHero:GetSpellData(_Q).name:lower():find("one") then return 1100 else return 1300 end end, Width = 58, Delay = 0.25, Speed = 1800, LastCastTime1 = 0, LastCastTime2 = 0, Collision = true, IsReady = function() return myHero:CanUseSpell(_Q) == READY end, Mana = function() return myHero:GetSpellData(_Q).mana end, Damage = function(target) return getDmg("Q", target, myHero, 3) end, State = function() if myHero:GetSpellData(_Q).name:lower():find("one") then return 1 else return 2 end end , Obj = nil, IsFlying = false, Target = nil}
 local W = { Range = function() return 700 end , ExtraRange = 50, Width = 0, Delay = 0.25, Speed = 2000, LastCastTime1 = 0, LastCastTime2 = 0, Collision = false, IsReady = function() return myHero:CanUseSpell(_W) == READY end, Mana = function() return myHero:GetSpellData(_W).mana end, Damage = function(target) return getDmg("W", target, myHero) end, State = function() if myHero:GetSpellData(_W).name:lower():find("one") then return 1 else return 2 end end }
 local E = { Range = function() if myHero:GetSpellData(_E).name:lower():find("one") then return 380 else return 560 end end , Width = 430, Delay = 0.5, Speed = math.huge, LastCastTime1 = 0, LastCastTime2 = 0, Collision = false, IsReady = function() return myHero:CanUseSpell(_E) == READY end, Mana = function() return myHero:GetSpellData(_E).mana end, Damage = function(target) return getDmg("E", target, myHero) end, State = function() if myHero:GetSpellData(_E).name:lower():find("one") then return 1 else return 2 end end }
 local R = { Range = function() return 375 end , KickRange = 800, Width = 0, Delay = 0.5, Speed = 1500, LastCastTime = 0, Collision = false, IsReady = function() return myHero:CanUseSpell(_R) == READY end, Mana = function() return myHero:GetSpellData(_R).mana end, Damage = function(target) return getDmg("R", target, myHero) end }
@@ -939,7 +939,7 @@ function OnProcessSpell(unit, spell)
                 function() 
                     if P.Stacks > 0 then P.Stacks = P.Stacks - 1 end
                 end
-            , WindUpTime() - GetLatency() / 2000 * 2)
+            , WindUpTime())
     elseif spell.name:lower() == "blindmonkqone" then Q.LastCastTime1 = os.clock() P.Stacks = 2
     elseif spell.name:lower() == "blindmonkqtwo" then Q.LastCastTime2 = os.clock() P.Stacks = 2 Q.IsFlying = true
     elseif spell.name:lower() == "blindmonkwone" then W.LastCastTime1 = os.clock() P.Stacks = 2
@@ -957,7 +957,7 @@ function OnProcessSpell(unit, spell)
 end
 
 function WindUpTime()
-    return (1 / (myHero.attackSpeed * baseWindUpTime)) + 80 / 1000
+    return (1 / (myHero.attackSpeed * baseWindUpTime))
 end
 
 function RecvPacket(p)
@@ -1441,7 +1441,7 @@ end
 
 function Insec:GapClose(from, target, to, mode)
     local distanceBetween = self:DistanceBetween(myHero, target)
-    local Position, HitChance, _ = prediction:GetPredictedPos(target, W.Delay + (distanceBetween + GetDistance(from, target) + 50)/W.Speed)
+    local Position, HitChance, _ = prediction:GetPredictedPos(target, W.Delay + (distanceBetween + GetDistance(from, target) + 100)/W.Speed)
     --local Position = Vector(target)
     if Position ~= nil then
         local GapClosePos = Vector(Position) + Vector(Position.x - to.x, 0,  Position.z - to.z):normalized() * 600
@@ -1473,10 +1473,10 @@ function Insec:CastR(from, target, to)
         if R.IsReady() and from.valid and ValidTarget(target) and to~=nil and GetDistanceSqr(from, target) < R.Range() * R.Range() and GetDistanceSqr(from, to) > GetDistanceSqr(target, to) then
             local finalPos = Vector(from) + Vector(target.x - from.x, 0,  target.z - from.z):normalized() * R.KickRange
             local closestAllyToInsec = VectorPointProjectionOnLine(from, finalPos, to)
-            if GetDistanceSqr(closestAllyToInsec, to) < R.KickRange * R.KickRange * 0.8 * 0.8 then
+            --if GetDistanceSqr(closestAllyToInsec, to) < R.KickRange * R.KickRange * 0.8 * 0.8 then
                 if Q.State() == 1 and Q.IsReady() then CastQ1(target) end
                 CastR(target)
-            end
+            --end
         end
     end
 end
@@ -1814,7 +1814,7 @@ function Prediction:GetPrediction(target, delay, width, range, speed, source, sk
                 local i = 0
                 --for i = 0, 1, 1 do
                     local hitchance = 2 - i
-                    state, pos, perc = DP:predict(unit, asd, hitchance)
+                    state, pos, perc = DP:predict(unit, asd, 1.2)
                     if state == SkillShot.STATUS.SUCCESS_HIT then 
                         return pos, hitchance, perc
                     end
